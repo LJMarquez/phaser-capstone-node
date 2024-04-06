@@ -9,15 +9,15 @@ export default class Preloader extends Phaser.Scene {
         this.load.image("tiles", "tiles/dungeon_tiles.png");
         this.load.tilemapTiledJSON("dungeon", "./tiles/dungeon-01.json");
     
-        this.load.spritesheet("playerIdle", "character/Knight_Idle.png", {
+        this.load.spritesheet("playerIdle", "player/Knight_Idle.png", {
           frameWidth: 52,
           frameHeight: 52,
         });
-        this.load.spritesheet("playerWalk", "character/Knight_Move.png", {
+        this.load.spritesheet("playerWalk", "player/Knight_Move.png", {
           frameWidth: 52,
           frameHeight: 52,
         });
-        this.load.spritesheet("playerAttack", "character/Knight_Attack.png", {
+        this.load.spritesheet("playerAttack", "player/Knight_Attack.png", {
           frameWidth: 52,
           frameHeight: 52,
         });
@@ -30,4 +30,8 @@ export default class Preloader extends Phaser.Scene {
           frameHeight: 32,
         });
     }
+
+    create() {
+        this.scene.start("game");
+      }
 }
