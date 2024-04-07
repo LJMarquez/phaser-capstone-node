@@ -22,7 +22,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         if (this.healthState == DAMAGE) {
             return
         }
-        console.log("HIT");
         this.setVelocity(dir.x, dir.y);
         this.setTint(0xff0000);
         this.healthState = DAMAGE;
@@ -46,7 +45,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     update(cursors) {
-        console.log(this.healthState);
         if (facingLeft) {
             this.setFlipX(true);
           } else {
