@@ -33,25 +33,33 @@ const createPlayerAnims = (anims) => {
       repeat: 0,
     });
   
-    // anims.create({
-    //   key: "playerAttackDD",
-    //   frames: [{ key: "playerAttack", frame: 1 }],
-    // });
+    anims.create({
+      key: "playerAttackDD",
+      frames: anims.generateFrameNumbers("playerAttack", { start: 4, end: 7 }),
+      frameRate: 15,
+      repeat: 0,
+    });
   
-    // anims.create({
-    //   key: "playerAttack",
-    //   frames: [{ key: "playerAttack", frame: 2 }],
-    // });
+    anims.create({
+      key: "playerAttack",
+      frames: anims.generateFrameNumbers("playerAttack", { start: 8, end: 11 }),
+      frameRate: 15,
+      repeat: 0,
+    });
   
-    // anims.create({
-    //   key: "playerAttackDU",
-    //   frames: [{ key: "playerAttack", frame: 3 }],
-    // });
+    anims.create({
+      key: "playerAttackDU",
+      frames: anims.generateFrameNumbers("playerAttack", { start: 12, end: 15 }),
+      frameRate: 15,
+      repeat: 0,
+    });
   
-    // anims.create({
-    //   key: "playerAttackU",
-    //   frames: [{ key: "playerAttack", frame: 4 }],
-    // });
+    anims.create({
+      key: "playerAttackU",
+      frames: anims.generateFrameNumbers("playerAttack", { start: 16, end: 19 }),
+      frameRate: 15,
+      repeat: 0,
+    });
   
     anims.create({
       key: "playerWalkD",
