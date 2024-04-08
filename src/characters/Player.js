@@ -29,6 +29,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     preUpdate(t, dt) {
+      super.preUpdate(t, dt);
         switch (this.healthState) {
             case IDLE:
 

@@ -1,8 +1,9 @@
 import Phaser from 'phaser'
 
-import { debugDraw } from './utils/debug';
+import { debugDraw } from '../utils/debug';
 import { createEnemyAnims } from '../anims/EnemyAnims';
 import { createPlayerAnims } from '../anims/PlayerAnims';
+// import { createUIAnims } from '../anims/UIAnims';
 import Skeleton from '../enemies/Skeleton';
 import '../characters/Player'
 
@@ -20,8 +21,10 @@ export default class Game extends Phaser.Scene
     preload() {}
 
     create() {
+      this.scene.run('game-ui');
       createPlayerAnims(this.anims);
       createEnemyAnims(this.anims);
+      // createUIAnims(this.anims);
   
       cursors = this.input.keyboard.createCursorKeys();
   
