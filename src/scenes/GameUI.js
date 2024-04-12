@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { createUIAnims } from '../anims/UIAnims';
+// import { createUIAnims } from '../anims/UIAnims';
 
 
 export default class GameUI extends Phaser.Scene {
@@ -8,10 +8,11 @@ export default class GameUI extends Phaser.Scene {
     }
 
     create() {
-        createUIAnims(this.anims);
-
+        
+        // createUIAnims(this.anims);
+        this.add.image(100, 100, 'uiHeartFull');
         const hearts = this.add.group({
-            classType: Phaser.GameObjects.Image
+            classType: Phaser.GameObjects.Sprite
         });
 
         hearts.createMultiple({
@@ -19,10 +20,9 @@ export default class GameUI extends Phaser.Scene {
             setXY: {
                 x: 10,
                 y: 10,
-                stepX: 16
+                stepX: 20
             },
             quantity: 3
         })
-        console.log("ui");
     }
 }

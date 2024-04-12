@@ -13,7 +13,6 @@ export default class Preloader extends Phaser.Scene {
           frameWidth: 17,
           frameHeight: 17,
         });
-        // this.load.image("heart", "ui/heart.png");
     
         this.load.spritesheet("playerIdle", "player/Knight_Idle.png", {
           frameWidth: 52,
