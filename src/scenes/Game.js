@@ -3,9 +3,11 @@ import Phaser from 'phaser'
 import { debugDraw } from '../utils/debug';
 import { createEnemyAnims } from '../anims/EnemyAnims';
 import { createPlayerAnims } from '../anims/PlayerAnims';
-import { createUIAnims } from '../anims/UIAnims';
+// import { createUIAnims } from '../anims/UIAnims';
 import Skeleton from '../enemies/Skeleton';
 import '../characters/Player'
+
+import { sceneEvents } from '../events/EventCenter';
 
 let cursors;
 let player;
@@ -23,9 +25,8 @@ export default class Game extends Phaser.Scene
     create() {
       createPlayerAnims(this.anims);
       createEnemyAnims(this.anims);
-      createUIAnims(this.anims);
+      // createUIAnims(this.anims);
       this.scene.run('game-ui');
-      // this.add.image(200, 200, 'uiHeartFull');
   
       cursors = this.input.keyboard.createCursorKeys();
   
@@ -78,6 +79,8 @@ export default class Game extends Phaser.Scene
       const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(200);
 
       player.handleDamage(dir);
+
+      sceneEvents.emit('player-health-changed', player.health)
     }
   
     update(d, dt) {

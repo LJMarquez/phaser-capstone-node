@@ -6,7 +6,6 @@ let walkingX;
 let walkingUp;
 let walkingDown;
 let playerAttacking = false;
-let damageTime = 0;
 
 let IDLE = 0;
 let DAMAGE = 1;
@@ -16,16 +15,30 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         super(scene, x, y, texture, frame);
 
         this.healthState = IDLE;
+        this.damageTime = 0;
+        this._health = 3
+
+      }
+
+    get health() {
+      return this._health
     }
 
     handleDamage(dir) {
-        if (this.healthState == DAMAGE) {
-            return
-        }
-        this.setVelocity(dir.x, dir.y);
-        this.setTint(0xff0000);
-        this.healthState = DAMAGE;
-        this.damageTime = 0;
+      if (this._health <= 0) {
+        return
+      }
+      if (this.healthState == DAMAGE) {
+          return
+      }
+      this.setVelocity(dir.x, dir.y);
+      this.setTint(0xff0000);
+      this.healthState = DAMAGE;
+      this.damageTime = 0;
+      --this._health
+      if (this._health <= 0) {
+        // die
+      }
     }
 
     preUpdate(t, dt) {
