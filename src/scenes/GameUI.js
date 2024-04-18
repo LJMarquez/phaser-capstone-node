@@ -3,7 +3,7 @@ import Phaser from "phaser";
 import { sceneEvents } from "../events/EventCenter";
 
 // let hearts;
-let hearts = Phaser.GameObjects.Group
+// let hearts = Phaser.GameObjects.Group;
 export default class GameUI extends Phaser.Scene {
     constructor() {
         super({ key: 'game-ui' })
@@ -11,8 +11,6 @@ export default class GameUI extends Phaser.Scene {
 
 
     create() {
-        // createUIAnims(this.anims)
-
         this.hearts = this.add.group({
             classType: Phaser.GameObjects.Image
         });
@@ -60,7 +58,6 @@ export default class GameUI extends Phaser.Scene {
           } else {
             heart.setTexture('uiHeartEmpty');
           }
-
         })
     }
 }

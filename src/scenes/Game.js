@@ -80,7 +80,7 @@ export default class Game extends Phaser.Scene
 
       player.handleDamage(dir);
 
-      sceneEvents.emit('player-health-changed', player.health)
+      sceneEvents.emit('player-health-changed', player.health);
     }
   
     update(d, dt) {

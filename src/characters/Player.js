@@ -16,7 +16,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
         this.healthState = IDLE;
         this.damageTime = 0;
-        this._health = 3
+        this._health = 3;
 
       }
 
@@ -28,14 +28,14 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       if (this._health <= 0) {
         return
       }
-      if (this.healthState == DAMAGE) {
+      if (this.healthState === DAMAGE) {
           return
       }
       this.setVelocity(dir.x, dir.y);
       this.setTint(0xff0000);
       this.healthState = DAMAGE;
       this.damageTime = 0;
-      --this._health
+      this._health--
       if (this._health <= 0) {
         // die
       }
