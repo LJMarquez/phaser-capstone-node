@@ -29,6 +29,10 @@ export default class Preloader extends Phaser.Scene {
           frameWidth: 52,
           frameHeight: 52,
         });
+        this.load.spritesheet("playerFaint", "player/Knight_Faint.png", {
+          frameWidth: 52,
+          frameHeight: 52,
+        });
         this.load.spritesheet("enemyWalk", "enemies/undead_walk.png", {
           frameWidth: 56,
           frameHeight: 48,

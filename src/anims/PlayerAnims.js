@@ -25,6 +25,11 @@ const createPlayerAnims = (anims) => {
       key: "playerIdleU",
       frames: [{ key: "playerIdle", frame: 4 }],
     });
+
+    anims.create({
+      key: "playerFaint",
+      frames: [{ key: "playerFaint", frame: 0 }],
+    });
   
     anims.create({
       key: "playerAttackD",
@@ -94,6 +99,13 @@ const createPlayerAnims = (anims) => {
       frames: anims.generateFrameNumbers("playerWalk", { start: 16, end: 19 }),
       frameRate: 15,
       repeat: -1,
+    });
+
+    anims.create({
+      key: "playerHit",
+      frames: anims.generateFrameNumbers("playerIdle", { start: 0, end: 7 }),
+      frameRate: 32,
+      repeat: 0,
     });
   };
 

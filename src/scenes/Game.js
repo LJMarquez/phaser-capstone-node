@@ -3,7 +3,6 @@ import Phaser from 'phaser'
 import { debugDraw } from '../utils/debug';
 import { createEnemyAnims } from '../anims/EnemyAnims';
 import { createPlayerAnims } from '../anims/PlayerAnims';
-// import { createUIAnims } from '../anims/UIAnims';
 import Skeleton from '../enemies/Skeleton';
 import '../characters/Player'
 
@@ -25,7 +24,6 @@ export default class Game extends Phaser.Scene
     create() {
       createPlayerAnims(this.anims);
       createEnemyAnims(this.anims);
-      // createUIAnims(this.anims);
       this.scene.run('game-ui');
   
       cursors = this.input.keyboard.createCursorKeys();
@@ -43,8 +41,6 @@ export default class Game extends Phaser.Scene
       // start of player code
   
       player = this.add.player(128, 128, 'player');
-      // player = this.physics.add.sprite(128, 128, "playerIdle");
-      // player.setScale(2);
   
       this.cameras.main.startFollow(player, true);
   
@@ -61,13 +57,14 @@ export default class Game extends Phaser.Scene
         })
 
         
-        skeletons.get(150, 150, "skeleton");
+        skeletons.get(200, 200, "skeleton");
   
       // end of enemy code
   
       this.physics.add.collider(player, wallsLayer);
       this.physics.add.collider(skeletons, wallsLayer);
-      this.physics.add.collider(player, skeletons, this.playerCollision, undefined, this);
+
+      this.playerEnemyCollider = this.physics.add.collider(player, skeletons, this.playerCollision, undefined, this);
 
     }
 
@@ -81,6 +78,10 @@ export default class Game extends Phaser.Scene
       player.handleDamage(dir);
 
       sceneEvents.emit('player-health-changed', player.health);
+
+      if (player.health <= 0) {
+        this.playerEnemyCollider.destroy();
+      }
     }
   
     update(d, dt) {
