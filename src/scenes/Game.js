@@ -37,10 +37,15 @@ export default class Game extends Phaser.Scene
       wallsLayer.setCollisionByProperty({ collides: true });
   
       debugDraw(wallsLayer, this);
+
+      this.knives = this.physics.add.group({
+        classType: Phaser.Physics.Arcade.Image
+      })
   
       // start of player code
   
       player = this.add.player(128, 128, 'player');
+      player.setKnives(this.knives);
   
       this.cameras.main.startFollow(player, true);
   
@@ -48,7 +53,7 @@ export default class Game extends Phaser.Scene
   
       // start of enemy code
       
-      skeletons = this.physics.add.group({
+      this.skeletons = this.physics.add.group({
           classType: Skeleton,
           createCallback: (go) => {
               const skelGo = go;
@@ -57,19 +62,31 @@ export default class Game extends Phaser.Scene
         })
 
         
-        skeletons.get(200, 200, "skeleton");
+      this.skeletons.get(200, 200, "skeleton");
   
       // end of enemy code
   
       this.physics.add.collider(player, wallsLayer);
-      this.physics.add.collider(skeletons, wallsLayer);
+      this.physics.add.collider(this.skeletons, wallsLayer);
+      
+      this.physics.add.collider(this.knives, wallsLayer, this.knifeWallCollision, undefined, this);
+      this.physics.add.collider(this.knives, this.skeletons, this.knifeSkeletonCollision, undefined, this);
 
-      this.playerEnemyCollider = this.physics.add.collider(player, skeletons, this.playerCollision, undefined, this);
+      this.playerEnemyCollider = this.physics.add.collider(player, this.skeletons, this.playerCollision, undefined, this);
 
     }
 
-    playerCollision(obj1, obj2) {
-      const skeleton = obj2;
+    knifeWallCollision(knife, obj2) {
+      this.knives.killAndHide(knife);
+    }
+
+    knifeSkeletonCollision(knife, skeleton) {
+      this.knives.killAndHide(knife);
+      skeleton.disableBody(true, true);
+    }
+
+    playerCollision(player, skeleton) {
+
       const dx = player.x - skeleton.x;
       const dy = player.y - skeleton.y;
 
@@ -82,6 +99,7 @@ export default class Game extends Phaser.Scene
       if (player.health <= 0) {
         this.playerEnemyCollider.destroy();
       }
+
     }
   
     update(d, dt) {
