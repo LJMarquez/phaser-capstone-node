@@ -15,6 +15,8 @@ export default class Preloader extends Phaser.Scene {
 
         this.load.image('knife', 'weapons/knife.png');
 
+        // import throw anims
+
         this.load.spritesheet("uiHeart", "ui/heart_animated.png", {
           frameWidth: 17,
           frameHeight: 17,

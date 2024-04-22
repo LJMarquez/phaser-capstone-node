@@ -61,6 +61,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       return
     }
     const vec = new Phaser.Math.Vector2(0, 0);
+
+    // add throwing anims
+
     switch (currentDirection) {
           case "down":
             // this.anims.play("playerAttackD", true);

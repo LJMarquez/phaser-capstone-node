@@ -107,6 +107,9 @@ const createPlayerAnims = (anims) => {
       frameRate: 32,
       repeat: 0,
     });
+
+    // make throw anims
+
   };
 
   export {
