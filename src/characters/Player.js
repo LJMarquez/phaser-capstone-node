@@ -81,38 +81,41 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             // this.anims.play("playerAttack");
             // this.body.setSize(this.width * 0.6, this.height * 0.5);
             // this.body.offset.y = 10;
-            if (facingLeft) {
+            // if (facingLeft) {
             //   this.body.offset.x = 0;
-            vec.x = -1;
-            } else {
+            // vec.x = -1;
+            // } else {
             //   this.body.offset.x = 21;
-            vec.x = 1;
-            }
+            // vec.x = 1;
+            // }
+            vec.x = facingLeft ? -1 : 1;
             break;
           case "diagonal down":
             // this.anims.play("playerAttackDD");
             // this.body.setSize(this.width * 0.55, this.height * 0.5);
             // this.body.offset.y = 10;
-            if (facingLeft) {
+            // if (facingLeft) {
             //   this.body.offset.x = 3;
-            vec.x = -0.75;
-            } else {
+            // vec.x = -0.75;
+            // } else {
             //   this.body.offset.x = 21;
-            vec.x = 0.75;
-            }
+            // vec.x = 0.75;
+            // }
+            vec.x = facingLeft ? -0.75 : 0.75;
             vec.y = 0.75;
             break;
           case "diagonal up":
             // this.anims.play("playerAttackDU");
             // this.body.setSize(this.width * 0.55, this.height * 0.5);
             // this.body.offset.y = 10;
-            if (facingLeft) {
+            // if (facingLeft) {
             //   this.body.offset.x = 3;
-            vec.x = -0.75;
-            } else {
+            // vec.x = -0.75;
+            // } else {
             //   this.body.offset.x = 21;
-            vec.x = 0.75;
-            }
+            // vec.x = 0.75;
+            // }
+            vec.x = facingLeft ? -0.75 : 0.75;
             vec.y = -0.75;
             break;
         }
@@ -148,6 +151,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   update(cursors) {
+    console.log(currentDirection);
     if (this.healthState == DAMAGE || this.healthState == DEAD) {
       return;
     }
@@ -188,7 +192,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           walkingDown = false;
         }
 
-        // if (this.healthState == IDLE) {
+        if (this.healthState == IDLE) {
           if (walkingX && walkingDown) {
             if (!playerAttacking) {
               this.anims.play("playerWalkDD", true);
@@ -233,7 +237,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
             this.setVelocity(0, 100);
           }
 
-          if (Phaser.Input.Keyboard.JustDown(cursors.space)) {
+             if (Phaser.Input.Keyboard.JustDown(cursors.space)) {
             this.throwKnife();
             return
           }
@@ -293,7 +297,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           // }
 
 
-        // }
+        }
 
         if (
           cursors.up.isUp &&
