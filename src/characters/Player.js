@@ -61,57 +61,48 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (!this.knives) {
       return;
     }
-    const vec = new Phaser.Math.Vector2(0, 0);
-    playerThrowing = true;
 
-    // add throwing anims
+    if (
+      currentDirection == "down" ||
+      currentDirection == "up" ||
+      currentDirection == "straight"
+    ) {
+      const vec = new Phaser.Math.Vector2(0, 0);
+      playerThrowing = true;
 
-    switch (currentDirection) {
-      case "down":
-        this.anims.play("playerThrowD", true);
-        // this.body.setSize(this.width * 0.25, this.height * 0.6);
-        // this.body.offset.y = 16;
-        vec.y = 1;
-        break;
-      case "up":
-        this.anims.play("playerThrowU");
-        // this.body.setSize(this.width * 0.23, this.height * 0.6);
-        // this.body.offset.y = 5;
-        vec.y = -1;
-        break;
-      case "straight":
-        this.anims.play("playerThrow");
-        // this.body.setSize(this.width * 0.6, this.height * 0.5);
-        // this.body.offset.y = 10;
-        // if (facingLeft) {
-        //   this.body.offset.x = 0;
-        // vec.x = -1;
-        // } else {
-        //   this.body.offset.x = 21;
-        // vec.x = 1;
-        // }
-        vec.x = facingLeft ? -1 : 1;
-        break;
+      switch (currentDirection) {
+        case "down":
+          this.anims.play("playerThrowD", true);
+          vec.y = 1;
+          break;
+        case "up":
+          this.anims.play("playerThrowU");
+          vec.y = -1;
+          break;
+        case "straight":
+          this.anims.play("playerThrow");
+          vec.x = facingLeft ? -1 : 1;
+          break;
+      }
+      const angle = vec.angle();
+      const knife = this.knives.get(this.x, this.y, "knife");
+
+      setTimeout(function () {
+        knife.setActive(true);
+        knife.setVisible(true);
+
+        knife.setRotation(angle);
+
+        knife.x += vec.x * 16;
+        knife.y += vec.y * 16;
+
+        knife.setVelocity(vec.x * 300, vec.y * 300);
+      }, 180);
+
+      setTimeout(function () {
+        playerThrowing = false;
+      }, 267);
     }
-    const angle = vec.angle();
-    const knife = this.knives.get(this.x, this.y, "knife");
-
-    setTimeout(function () {
-
-      knife.setActive(true);
-      knife.setVisible(true);
-
-      knife.setRotation(angle);
-
-      knife.x += vec.x * 16;
-      knife.y += vec.y * 16;
-
-      knife.setVelocity(vec.x * 300, vec.y * 300);
-    }, 180);
-
-    setTimeout(function () {
-      playerThrowing = false;
-    }, 267);
   }
 
   preUpdate(t, dt) {
@@ -130,8 +121,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
-  update(cursors) {
-    console.log(currentDirection);
+  update(cursors, zKey, xKey) {
     if (this.healthState == DAMAGE || this.healthState == DEAD) {
       return;
     }
@@ -142,7 +132,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     if (this.healthState != DAMAGE) {
-      if (!playerAttacking || !playerThrowing) {
+      if (!playerAttacking) {
         this.body.setSize(this.width * 0.23, this.height * 0.39);
         this.body.offset.x = 21;
         this.body.offset.y = 16;
@@ -173,27 +163,28 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       }
 
       if (this.healthState == IDLE) {
-        if (walkingX && walkingDown) {
-          if (!playerAttacking && !playerThrowing) {
-            this.anims.play("playerWalkDD", true);
-          }
-          currentDirection = "diagonal down";
-          if (facingLeft) {
-            this.setVelocity(-100, 100);
-          } else {
-            this.setVelocity(100, 100);
-          }
-        } else if (walkingX && walkingUp) {
-          if (!playerAttacking && !playerThrowing) {
-            this.anims.play("playerWalkDU", true);
-          }
-          currentDirection = "diagonal up";
-          if (facingLeft) {
-            this.setVelocity(-100, -100);
-          } else {
-            this.setVelocity(100, -100);
-          }
-        } else if (walkingX) {
+        // if (walkingX && walkingDown) {
+        //   if (!playerAttacking && !playerThrowing) {
+        //     this.anims.play("playerWalkDD", true);
+        //   }
+        //   currentDirection = "diagonal down";
+        //   if (facingLeft) {
+        //     this.setVelocity(-100, 100);
+        //   } else {
+        //     this.setVelocity(100, 100);
+        //   }
+        // } else if (walkingX && walkingUp) {
+        //   if (!playerAttacking && !playerThrowing) {
+        //     this.anims.play("playerWalkDU", true);
+        //   }
+        //   currentDirection = "diagonal up";
+        //   if (facingLeft) {
+        //     this.setVelocity(-100, -100);
+        //   } else {
+        //     this.setVelocity(100, -100);
+        //   }
+        // } else 
+        if (walkingX) {
           if (!playerAttacking && !playerThrowing) {
             this.anims.play("playerWalk", true);
           }
@@ -217,66 +208,69 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           this.setVelocity(0, 100);
         }
 
-        if (Phaser.Input.Keyboard.JustDown(cursors.space)) {
-          // if (cursors.space.isDown) {
-          this.throwKnife();
-          return;
-        }
-
-        if (
-          Phaser.Input.Keyboard.JustDown(cursors.Z) &&
-          !playerAttacking &&
-          !playerThrowing
-        ) {
-          playerAttacking = true;
-          switch (currentDirection) {
-            case "down":
-              this.anims.play("playerAttackD", true);
-              this.body.setSize(this.width * 0.25, this.height * 0.6);
-              this.body.offset.y = 16;
-              break;
-            case "up":
-              this.anims.play("playerAttackU");
-              this.body.setSize(this.width * 0.23, this.height * 0.6);
-              this.body.offset.y = 5;
-              // potential bug ^
-              break;
-            case "straight":
-              this.anims.play("playerAttack");
-              this.body.setSize(this.width * 0.6, this.height * 0.5);
-              this.body.offset.y = 10;
-              if (facingLeft) {
-                this.body.offset.x = 0;
-              } else {
-                this.body.offset.x = 21;
-              }
-              break;
-            case "diagonal down":
-              this.anims.play("playerAttackDD");
-              this.body.setSize(this.width * 0.55, this.height * 0.5);
-              this.body.offset.y = 10;
-              if (facingLeft) {
-                this.body.offset.x = 3;
-              } else {
-                this.body.offset.x = 21;
-              }
-              break;
-            case "diagonal up":
-              this.anims.play("playerAttackDU");
-              this.body.setSize(this.width * 0.55, this.height * 0.5);
-              this.body.offset.y = 10;
-              if (facingLeft) {
-                this.body.offset.x = 3;
-              } else {
-                this.body.offset.x = 21;
-              }
-              break;
+        xKey.on("down", () => {
+          if (Phaser.Input.Keyboard.JustDown(xKey)) {
+            this.throwKnife();
+            return;
           }
+        });
 
-          setTimeout(function () {
-            playerAttacking = false;
-          }, 267);
-        }
+        zKey.on("down", () => {
+          if (
+            Phaser.Input.Keyboard.JustDown(zKey) &&
+            !playerAttacking &&
+            !playerThrowing
+          ) {
+            playerAttacking = true;
+            switch (currentDirection) {
+              case "down":
+                this.anims.play("playerAttackD", true);
+                this.body.setSize(this.width * 0.25, this.height * 0.6);
+                this.body.offset.y = 16;
+                break;
+              case "up":
+                this.anims.play("playerAttackU");
+                this.body.setSize(this.width * 0.23, this.height * 0.6);
+                this.body.offset.y = 5;
+                // potential bug ^
+                break;
+              case "straight":
+                this.anims.play("playerAttack");
+                this.body.setSize(this.width * 0.6, this.height * 0.5);
+                this.body.offset.y = 10;
+                if (facingLeft) {
+                  this.body.offset.x = 0;
+                } else {
+                  this.body.offset.x = 21;
+                }
+                break;
+              // case "diagonal down":
+              //   this.anims.play("playerAttackDD");
+              //   this.body.setSize(this.width * 0.55, this.height * 0.5);
+              //   this.body.offset.y = 10;
+              //   if (facingLeft) {
+              //     this.body.offset.x = 3;
+              //   } else {
+              //     this.body.offset.x = 21;
+              //   }
+              //   break;
+              // case "diagonal up":
+              //   this.anims.play("playerAttackDU");
+              //   this.body.setSize(this.width * 0.55, this.height * 0.5);
+              //   this.body.offset.y = 10;
+              //   if (facingLeft) {
+              //     this.body.offset.x = 3;
+              //   } else {
+              //     this.body.offset.x = 21;
+              //   }
+              //   break;
+            }
+
+            setTimeout(function () {
+              playerAttacking = false;
+            }, 267);
+          }
+        });
       }
 
       if (
@@ -302,12 +296,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           case "straight":
             this.anims.play("playerIdle");
             break;
-          case "diagonal down":
-            this.anims.play("playerIdleDD");
-            break;
-          case "diagonal up":
-            this.anims.play("playerIdleDU");
-            break;
+          // case "diagonal down":
+          //   this.anims.play("playerIdleDD");
+          //   break;
+          // case "diagonal up":
+          //   this.anims.play("playerIdleDU");
+          //   break;
         }
       }
     }
