@@ -65,6 +65,41 @@ const createPlayerAnims = (anims) => {
       frameRate: 15,
       repeat: 0,
     });
+
+    anims.create({
+      key: "playerThrowD",
+      frames: anims.generateFrameNumbers("playerThrow", { start: 0, end: 3 }),
+      frameRate: 15,
+      repeat: 0,
+    });
+  
+    anims.create({
+      key: "playerThrowDD",
+      frames: anims.generateFrameNumbers("playerThrow", { start: 4, end: 7 }),
+      frameRate: 15,
+      repeat: 0,
+    });
+  
+    anims.create({
+      key: "playerThrow",
+      frames: anims.generateFrameNumbers("playerThrow", { start: 8, end: 11 }),
+      frameRate: 15,
+      repeat: 0,
+    });
+  
+    anims.create({
+      key: "playerThrowDU",
+      frames: anims.generateFrameNumbers("playerThrow", { start: 12, end: 15 }),
+      frameRate: 15,
+      repeat: 0,
+    });
+  
+    anims.create({
+      key: "playerThrowU",
+      frames: anims.generateFrameNumbers("playerThrow", { start: 16, end: 19 }),
+      frameRate: 15,
+      repeat: 0,
+    });
   
     anims.create({
       key: "playerWalkD",
