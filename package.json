@@ -1,4 +1,5 @@
 {
+	"type": "module",
 	"name": "phaser3-parcel-template",
 	"version": "1.0.0",
 	"description": "A template project for Phaser 3 using Parceljs",
