@@ -14,9 +14,9 @@ let xKey;
 let player;
 let skeletons;
 
-export default class Game extends Phaser.Scene {
+export default class Start extends Phaser.Scene {
   constructor() {
-    super("game");
+    super("start");
   }
 
   preload() {}
@@ -30,8 +30,8 @@ export default class Game extends Phaser.Scene {
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
 
-    const map = this.make.tilemap({ key: "dungeon" });
-    const tileset = map.addTilesetImage("dungeon", "tiles", 16, 16);
+    const map = this.make.tilemap({ key: "test" });
+    const tileset = map.addTilesetImage("test", "tiles", 16, 16);
 
     map.createLayer("Ground", tileset);
     const wallsLayer = map.createLayer("Walls", tileset);
@@ -63,7 +63,8 @@ export default class Game extends Phaser.Scene {
       },
     });
 
-    // this.skeletons.get(200, 100, "skeleton");
+    this.skeletons.get(200, 100, "skeleton");
+    this.skeletons.get(200, 200, "skeleton");
 
     // end of enemy code
 

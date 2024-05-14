@@ -14,6 +14,13 @@ const createEnemyAnims = (anims) => {
       frameRate: 10,
       repeat: -1,
     });
+
+    anims.create({
+      key: "bodIdle",
+      frames: anims.generateFrameNumbers("bodIdle", { start: 0, end: 7 }),
+      frameRate: 10,
+      repeat: -1,
+    });
   };
 
 export {
