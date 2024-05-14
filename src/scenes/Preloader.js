@@ -54,6 +54,14 @@ export default class Preloader extends Phaser.Scene {
           frameWidth: 48,
           frameHeight: 32,
         });
+        this.load.spritesheet("enemyDeath", "enemies/undead_death.png", {
+          frameWidth: 72,
+          frameHeight: 32,
+        });
+        this.load.spritesheet("enemyAttack", "enemies/undead_attack.png", {
+          frameWidth: 56,
+          frameHeight: 48,
+        });
 
         this.load.spritesheet("morshuWalk", "enemies/morshu-sprites.png", {
           frameWidth: 48,

@@ -17,6 +17,10 @@ const randomDirection = (exclude) => {
 export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
     constructor(scene, x, y, texture) {
         super(scene, x, y, texture);
+
+        this.moveEventActive = true;
+
+        this.canAttack = true;
     
         this.anims.play("enemyWalk", true);
     
@@ -29,6 +33,7 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
         this.moveEvent = scene.time.addEvent({
           delay: 2000,
           callback: () => {
+            if (this.moveEventActive == true)
             this.direction = randomDirection(this.direction);
           },
           loop: true
@@ -61,23 +66,27 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
     
         const speed = 50;
     
-        switch (this.direction) {
-          case UP:
-            this.setVelocityY(-50);
-            break;
-          case DOWN:
-            this.setVelocityY(50);
-            break;
-          case LEFT:
-            this.setVelocityX(-50);
-            this.setFlipX(true);
-            this.body.offset.x = 18;
-            break;
-          case RIGHT:
-            this.setVelocityX(50);
-            this.setFlipX(false);
-            this.body.offset.x = 5;
-            break;
+        if (this.moveEventActive) {
+          switch (this.direction) {
+            case UP:
+              this.setVelocityY(-50);
+              break;
+            case DOWN:
+              this.setVelocityY(50);
+              break;
+            case LEFT:
+              this.setVelocityX(-50);
+              this.setFlipX(true);
+              this.body.offset.x = 18;
+              break;
+            case RIGHT:
+              this.setVelocityX(50);
+              this.setFlipX(false);
+              this.body.offset.x = 5;
+              break;
+          }
+        } else {
+          this.setVelocity(0, 0);
         }
       }
 }

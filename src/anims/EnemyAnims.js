@@ -16,6 +16,20 @@ const createEnemyAnims = (anims) => {
     });
 
     anims.create({
+      key: "enemyDeath",
+      frames: anims.generateFrameNumbers("enemyDeath", { start: 0, end: 12 }),
+      frameRate: 10,
+      repeat: 0,
+    });
+
+    anims.create({
+      key: "enemyAttack",
+      frames: anims.generateFrameNumbers("enemyAttack", { start: 0, end: 19 }),
+      frameRate: 12,
+      repeat: 0,
+    });
+
+    anims.create({
       key: "bodIdle",
       frames: anims.generateFrameNumbers("bodIdle", { start: 0, end: 7 }),
       frameRate: 10,
