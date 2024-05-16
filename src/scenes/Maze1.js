@@ -4,7 +4,6 @@ import { debugDraw } from "../utils/debug";
 import { createEnemyAnims } from "../anims/EnemyAnims";
 import { createPlayerAnims } from "../anims/PlayerAnims";
 import Skeleton from "../enemies/Skeleton";
-import BOD from "../enemies/BOD";
 import "../characters/Player";
 
 import { sceneEvents } from "../events/EventCenter";
@@ -16,10 +15,9 @@ let player;
 let skeletons;
 let skeletonAttackCooldown = 1667;
 
-export default class Start extends Phaser.Scene {
+export default class Maze1 extends Phaser.Scene {
   constructor() {
-    super("start");
-    this.player = null;
+    super("maze1");
   }
 
   preload() {}
@@ -49,11 +47,10 @@ export default class Start extends Phaser.Scene {
 
     // start of player code
 
-    // player = this.add.player(128, 128, "player", cursors);
-    this.player = this.add.player(128, 128, "player", cursors);
-    this.player.setKnives(this.knives);
+    player = this.add.player(128, 128, "player", cursors);
+    player.setKnives(this.knives);
 
-    this.cameras.main.startFollow(this.player, true);
+    this.cameras.main.startFollow(player, true);
 
     // end of player code
 
@@ -67,21 +64,11 @@ export default class Start extends Phaser.Scene {
       },
     });
 
-    this.bod = this.physics.add.group({
-      classType: BOD,
-      createCallback: (go) => {
-        const bodGo = go;
-        bodGo.body.onCollide = true;
-      },
-    });
-
-    // this.skeletons.get(200, 250, "skeleton");
-    this.bod.get(200, 150, "bod");
-
+    this.skeletons.get(200, 200, "skeleton");
 
     // end of enemy code
 
-    this.physics.add.collider(this.player, wallsLayer);
+    this.physics.add.collider(player, wallsLayer);
     this.physics.add.collider(this.skeletons, wallsLayer);
 
     this.physics.add.collider(
@@ -100,7 +87,7 @@ export default class Start extends Phaser.Scene {
     );
 
     this.playerEnemyCollider = this.physics.add.collider(
-      this.player,
+      player,
       this.skeletons,
       this.playerCollision,
       undefined,
@@ -162,30 +149,30 @@ export default class Start extends Phaser.Scene {
         });
       }, 1300);
     } else {
-      const dx = this.player.x - skeleton.x;
-      const dy = this.player.y - skeleton.y;
+      const dx = player.x - skeleton.x;
+      const dy = player.y - skeleton.y;
 
       const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(200);
 
-      this.player.handleDamage(dir);
+      player.handleDamage(dir);
 
-      sceneEvents.emit("player-health-changed", this.player.health);
+      sceneEvents.emit("player-health-changed", player.health);
 
-      if (this.player.health <= 0) {
+      if (player.health <= 0) {
         this.playerEnemyCollider.destroy();
       }
     }
   }
 
   skeletonAttack(skeleton) {
-    if (this.player.x > skeleton.x) {
+    if (player.x > skeleton.x) {
       skeleton.setFlipX(false);
     } else {
       skeleton.setFlipX(true);
     }
     this.time.delayedCall(600, () => {
-      const dx = this.player.x - skeleton.x;
-      const dy = this.player.y - skeleton.y;
+      const dx = player.x - skeleton.x;
+      const dy = player.y - skeleton.y;
       const distance = Math.sqrt(dx * dx + dy * dy);
       const normalizedDx = dx / distance;
       const normalizedDy = dy / distance;
@@ -196,7 +183,7 @@ export default class Start extends Phaser.Scene {
 
       skeleton.body.setSize(skeleton.width * 0.6, skeleton.height * 0.71);
       skeleton.body.offset.y = 10;
-      if (this.player.x > skeleton.x) {
+      if (player.x > skeleton.x) {
         skeleton.body.offset.x = 15;
       } else {
         skeleton.body.offset.x = 5;
@@ -215,14 +202,14 @@ export default class Start extends Phaser.Scene {
   }
 
   update(d, dt) {
-    if (this.player) {
-      this.player.update(cursors, zKey, xKey);
+    if (player) {
+      player.update(cursors, zKey, xKey);
     }
 
     this.skeletons.getChildren().forEach((skeleton) => {
       const distance = Phaser.Math.Distance.Between(
-        this.player.x,
-        this.player.y,
+        player.x,
+        player.y,
         skeleton.x,
         skeleton.y
       );

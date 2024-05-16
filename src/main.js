@@ -4,7 +4,8 @@ import Phaser from "phaser"
 
 import Preloader from './scenes/Preloader'
 import Start from './scenes/Start'
-import Game from './scenes/Game'
+import Maze1 from './scenes/Maze1'
+import Boss1 from './scenes/Boss1'
 import GameUI from './scenes/GameUI'
 
 export default new Phaser.Game({
@@ -18,7 +19,7 @@ export default new Phaser.Game({
 			debug: true
 		}
 	},
-	scene: [Preloader, Start, Game, GameUI],
+	scene: [Preloader, Start, Maze1, Boss1, GameUI],
 	scale: {
 		zoom: 2
 	}

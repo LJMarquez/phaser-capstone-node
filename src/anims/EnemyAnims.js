@@ -31,10 +31,18 @@ const createEnemyAnims = (anims) => {
 
     anims.create({
       key: "bodIdle",
-      frames: anims.generateFrameNumbers("bodIdle", { start: 0, end: 7 }),
+      frames: anims.generateFrameNumbers("bod", { start: 0, end: 7 }),
       frameRate: 10,
       repeat: -1,
     });
+
+    anims.create({
+      key: "bodWalk",
+      frames: anims.generateFrameNumbers("bod", { start: 8, end: 15 }),
+      frameRate: 7,
+      repeat: -1,
+    });
+
   };
 
 export {

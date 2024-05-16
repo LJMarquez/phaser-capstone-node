@@ -68,13 +68,13 @@ export default class Preloader extends Phaser.Scene {
           frameHeight: 32,
         });
 
-        this.load.spritesheet("bodWalk", "enemies/Bringer-of-Death-Spritesheet.png", {
+        this.load.spritesheet("bod", "enemies/Bringer-of-Death-Spritesheet.png", {
           frameWidth: 140,
-          frameHeight: 115,
+          frameHeight: 92,
         });
     }
 
     create() {
-        this.scene.start("game");
+        this.scene.start("boss1");
       }
 }
