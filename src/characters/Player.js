@@ -233,22 +233,22 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           }
           currentDirection = "straight";
           if (facingLeft) {
-            this.setVelocity(-90, 0);
+            this.setVelocity(-100, 0);
           } else {
-            this.setVelocity(90, 0);
+            this.setVelocity(100, 0);
           }
         } else if (walkingUp) {
           if (!playerAttacking && !playerThrowing) {
             this.anims.play("playerWalkU", true);
           }
           currentDirection = "up";
-          this.setVelocity(0, -90);
+          this.setVelocity(0, -100);
         } else if (walkingDown) {
           if (!playerAttacking && !playerThrowing) {
             this.anims.play("playerWalkD", true);
           }
           currentDirection = "down";
-          this.setVelocity(0, 90);
+          this.setVelocity(0, 100);
         }
 
         // if (walkingX) {

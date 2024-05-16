@@ -39,7 +39,7 @@ export default class Boss1 extends Phaser.Scene {
     map.createLayer("Ground", tileset);
     const wallsLayer = map.createLayer("Walls", tileset);
 
-    wallsLayer.setCollisionByProperty({ collides: true });
+    // wallsLayer.setCollisionByProperty({ collides: true });
 
     debugDraw(wallsLayer, this);
 
@@ -76,8 +76,7 @@ export default class Boss1 extends Phaser.Scene {
     });
 
     // this.skeletons.get(200, 250, "skeleton");
-    this.bod.get(70, 150, "bod");
-
+    this.bod.get(180, 200, "bod");
 
     // end of enemy code
 
@@ -86,6 +85,7 @@ export default class Boss1 extends Phaser.Scene {
 
     this.physics.add.collider(this.bod, wallsLayer);
 
+    this.physics.add.collider(this.bod, wallsLayer);
 
     this.physics.add.collider(
       this.knives,
@@ -306,40 +306,64 @@ export default class Boss1 extends Phaser.Scene {
     });
   }
 
-  BODSwordAttack(skeleton) {
-    if (this.player.x > skeleton.x) {
-      skeleton.setFlipX(false);
-    } else {
-      skeleton.setFlipX(true);
-    }
+  BODSwordAttack(bod) {
+    bod.isAttacking = true;
+    bod.setVelocity(0, 0);
+    const hitbox = this.add.rectangle(
+      bod.x, // Position the hitbox relative to the BOD
+      bod.y,
+      bod.width * 0.9,
+      bod.height * 0.9
+    );
+    this.physics.world.enable(hitbox);
     this.time.delayedCall(600, () => {
-      const dx = this.player.x - skeleton.x;
-      const dy = this.player.y - skeleton.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const normalizedDx = dx / distance;
-      const normalizedDy = dy / distance;
-      const lungeDistance = 900; // Adjust as needed
-      const lungeDx = normalizedDx * lungeDistance;
-      const lungeDy = normalizedDy * lungeDistance;
-      skeleton.setVelocity(lungeDx, lungeDy);
-
-      skeleton.body.setSize(skeleton.width * 0.6, skeleton.height * 0.71);
-      skeleton.body.offset.y = 10;
-      if (this.player.x > skeleton.x) {
-        skeleton.body.offset.x = 15;
+      bod.body.setSize(bod.width * 0.9, bod.height * 0.9);
+      bod.body.offset.y = 10;
+      if (this.player.x > bod.x) {
+        bod.body.offset.x = 15;
       } else {
-        skeleton.body.offset.x = 5;
+        bod.body.offset.x = -5;
       }
+
+      this.time.addEvent({
+        loop: true,
+        delay: 100, // Adjust the delay based on your animation frame rate
+        callback: () => {
+          const overlap = this.physics.overlap(hitbox, this.player);
+
+          if (overlap) {
+            const dx = this.player.x - bod.x;
+            const dy = this.player.y - bod.y;
+
+            const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(500);
+
+            this.player.handleDamage(dir);
+
+            sceneEvents.emit("player-health-changed", this.player.health);
+
+            if (this.player.health <= 0) {
+              this.physics.world.removeCollider(this.playerBODCollider);
+              this.playerBODCollider = null;
+            }
+          }
+        },
+      });
     });
-    skeleton.moveEventActive = false;
-    skeleton.setVelocity(0, 0);
-    skeleton.anims.play("enemyAttack", true);
-    this.time.delayedCall(1667, () => {
-      skeleton.moveEventActive = true;
-      skeleton.anims.play("enemyWalk", true);
-      skeleton.body.setSize(skeleton.width * 0.6, skeleton.height * 0.6);
-      skeleton.body.offset.y = 13;
-      skeleton.body.offset.x = 5;
+    bod.moveEventActive = false;
+    bod.anims.play("bodAttack", true);
+    this.time.delayedCall(1500, () => {
+      hitbox.destroy();
+      bod.setVelocity(0, 0);
+      bod.moveEventActive = true;
+      bod.anims.play("bodWalk", true);
+      bod.body.setSize(bod.width * 0.4, bod.height * 0.6);
+      bod.body.offset.y = 38;
+      if (bod.facingLeft) {
+        bod.body.offset.x = 76;
+      } else {
+        bod.body.offset.x = 10;
+      }
+      bod.isAttacking = true;
     });
   }
 
@@ -356,13 +380,32 @@ export default class Boss1 extends Phaser.Scene {
         skeleton.y
       );
 
-      const attackRange = 40;
+      const skeletonAttackRange = 40;
 
-      if (distance < attackRange && skeleton.canAttack == true) {
+      if (distance < skeletonAttackRange && skeleton.canAttack == true) {
         skeleton.canAttack = false;
         this.skeletonAttack(skeleton);
         this.time.delayedCall(2500, () => {
           skeleton.canAttack = true;
+        });
+      }
+    });
+
+    this.bod.getChildren().forEach((bod) => {
+      const distance = Phaser.Math.Distance.Between(
+        this.player.x,
+        this.player.y,
+        bod.x,
+        bod.y
+      );
+
+      const bodAttackRange = 60;
+
+      if (distance < bodAttackRange && bod.canAttack == true) {
+        bod.canAttack = false;
+        this.BODSwordAttack(bod);
+        this.time.delayedCall(2500, () => {
+          bod.canAttack = true;
         });
       }
     });

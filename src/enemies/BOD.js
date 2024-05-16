@@ -4,8 +4,7 @@ const UP = 0;
 const DOWN = 1;
 const LEFT = 2;
 const RIGHT = 3;
-// let health = 30;
-let direction;
+let directionChanged = false;
 
 const randomDirection = (exclude) => {
   let newDirection = Phaser.Math.Between(0, 3);
@@ -19,7 +18,14 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, texture, player) {
     super(scene, x, y, texture);
 
+    this.canAttack = true;
+
+    this.isAttacking = false;
+
     this.player = player;
+
+    this.facingLeft = null;
+    // this.xDirection = null;
 
     this.health = 30;
 
@@ -46,8 +52,8 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
     this.direction = LEFT;
 
     scene.physics.world.enable(this);
-    this.setScale(1.2);
-    this.body.setSize(this.width * 0.4, this.height * 0.61);
+    // this.setScale(1.2);
+    this.body.setSize(this.width * 0.4, this.height * 0.6);
     this.body.offset.y = 38;
     this.body.offset.x = 76;
   }
@@ -62,7 +68,7 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    // const newDirection = Phaser.Math.Between(0, 3);
+    const newDirection = Phaser.Math.Between(0, 3);
     this.direction = randomDirection(this.direction);
   }
   preUpdate(t, dt) {
@@ -80,46 +86,46 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
       this.direction = dy > 0 ? DOWN : UP;
     }
 
+    const previousFlipX = this.flipX;
+
     switch (this.direction) {
       case UP:
+        if (!this.isAttacking) {
         this.setVelocity(0, -speed);
+        }
         break;
       case DOWN:
+        if (!this.isAttacking) {
         this.setVelocity(0, speed);
+        }
         break;
       case LEFT:
         this.setFlipX(false);
-        this.body.offset.y = 38;
-        this.body.offset.x = 76;
-        this.x -= 66;
-        this.setVelocity(-speed, 0);
+        this.facingLeft = true;
+        if (!this.isAttacking) {
+          this.body.offset.x = 76;
+          this.setVelocity(-speed, 0);
+        }
         break;
       case RIGHT:
         this.setFlipX(true);
-        this.body.offset.y = 38;
+        this.facingLeft = false;
+        if (!this.isAttacking) {
         this.body.offset.x = 10;
-        this.x += 66;
         this.setVelocity(speed, 0);
+        }
         break;
     }
 
-    // switch (this.direction) {
-    //   case UP:
-    //     this.setVelocityY(-50);
-    //     break;
-    //   case DOWN:
-    //     this.setVelocityY(50);
-    //     break;
-    //   case LEFT:
-    //     this.setVelocityX(-50);
-    //     this.body.offset.x = 18;
-    //     break;
-    //   case RIGHT:
-    //     this.setFlipX(true);
-    //     this.setVelocityX(50);
-    //     this.setFlipX(false);
-    //     this.body.offset.x = 5;
-    //     break;
-    // }
+    if (this.flipX !== previousFlipX) {
+      // Adjust the x position only once when the sprite flips
+      if (this.flipX) {
+        this.x += 70;
+        this.body.offset.x = 10;
+      } else {
+        this.x -= 70;
+        this.body.offset.x = 76;
+      }
+    }
   }
 }

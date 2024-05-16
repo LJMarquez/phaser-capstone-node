@@ -70,7 +70,7 @@ export default class Preloader extends Phaser.Scene {
 
         this.load.spritesheet("bod", "enemies/Bringer-of-Death-Spritesheet.png", {
           frameWidth: 140,
-          frameHeight: 92,
+          frameHeight: 93,
         });
     }
 
