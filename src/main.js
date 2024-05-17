@@ -21,6 +21,8 @@ export default new Phaser.Game({
 	},
 	scene: [Preloader, Start, Maze1, Boss1, GameUI],
 	scale: {
-		zoom: 2
-	}
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+		zoom: 2.5
+	},
+	backgroundColor: '#141412'
 })

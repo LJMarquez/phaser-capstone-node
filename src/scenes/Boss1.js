@@ -35,13 +35,16 @@ export default class Boss1 extends Phaser.Scene {
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-    const map = this.make.tilemap({ key: "dungeon" });
-    const tileset = map.addTilesetImage("dungeon", "tiles", 16, 16);
+    const map = this.make.tilemap({ key: "dungeon_tiles_too" });
+    const tileset = map.addTilesetImage("dungeon_tiles_too", "tiles2", 16, 16);
 
     map.createLayer("Ground", tileset);
+    map.createLayer("Gracias", tileset);
     const wallsLayer = map.createLayer("Walls", tileset);
+    map.createLayer("Open_Door", tileset);
+    map.createLayer("Locked_Door", tileset);
 
-    // wallsLayer.setCollisionByProperty({ collides: true });
+    wallsLayer.setCollisionByProperty({ collides: true });
 
     debugDraw(wallsLayer, this);
 
@@ -52,7 +55,7 @@ export default class Boss1 extends Phaser.Scene {
     // start of player code
 
     // player = this.add.player(128, 128, "player", cursors);
-    this.player = this.add.player(128, 128, "player", cursors);
+    this.player = this.add.player(400, 450, "player", cursors);
     this.player.setKnives(this.knives);
 
     this.cameras.main.startFollow(this.player, true);
@@ -129,11 +132,13 @@ export default class Boss1 extends Phaser.Scene {
   }
 
   knifeWallCollision(knife, obj2) {
-    this.knives.killAndHide(knife);
+    // this.knives.killAndHide(knife);
+    knife.destroy();
   }
 
   knifeSkeletonCollision(knife, skeleton) {
-    this.knives.killAndHide(knife);
+    // this.knives.killAndHide(knife);
+    knife.destroy();
     skeleton.disableBody(true, true);
     const enemyDeathAnim = this.add.sprite(
       skeleton.x - 45,
@@ -230,38 +235,6 @@ export default class Boss1 extends Phaser.Scene {
   }
 
   playerBODCollision(player, bod) {
-    if (player.isAttacking == true) {
-      if (bod.health == 0) {
-        bod.disableBody(true, true);
-        bod.anims.play("enemyDeath");
-        const enemyDeathAnim = this.add.sprite(
-          bod.x - 45,
-          bod.y - 15,
-          "enemyDeath"
-        );
-        if (bod.direction == 3) {
-          enemyDeathAnim.setFlipX(true);
-        }
-        enemyDeathAnim.setOrigin(0, 0);
-        enemyDeathAnim.anims.play("enemyDeath", true);
-        setTimeout(() => {
-          this.tweens.add({
-            targets: enemyDeathAnim,
-            alpha: 0,
-            duration: 1000,
-            onComplete: () => {
-              enemyDeathAnim.destroy();
-            },
-          });
-        }, 1300);
-      } else {
-        // bod.health--;
-        bod.setTint(0xffffff);
-        this.time.delayedCall(100, () => {
-          bod.clearTint();
-        });
-      }
-    } else {
       const dx = this.player.x - bod.x;
       const dy = this.player.y - bod.y;
 
@@ -274,7 +247,6 @@ export default class Boss1 extends Phaser.Scene {
       if (this.player.health <= 0) {
         this.playerBODCollider.destroy();
       }
-    }
   }
 
   skeletonAttack(skeleton) {
@@ -350,13 +322,13 @@ export default class Boss1 extends Phaser.Scene {
     };
 
     this.time.delayedCall(600, () => {
-      bod.body.setSize(bod.width * 0.9, bod.height * 0.9);
-      bod.body.offset.y = 10;
-      if (this.player.x > bod.x) {
-        bod.body.offset.x = 15;
-      } else {
-        bod.body.offset.x = -5;
-      }
+      // bod.body.setSize(bod.width * 0.9, bod.height * 0.9);
+      // bod.body.offset.y = 10;
+      // if (this.player.x > bod.x) {
+      //   bod.body.offset.x = 15;
+      // } else {
+      //   bod.body.offset.x = -5;
+      // }
       enableHitboxOverlap();
     });
 
@@ -382,10 +354,11 @@ export default class Boss1 extends Phaser.Scene {
   }
 
   handleDamageBOD(bod) {
-    const knockbackDirection = new Phaser.Math.Vector2(this.x - this.player.hitbox.x, this.y - this.player.hitbox.y).normalize();
-    const knockbackMagnitude = 1000; // Adjust as needed
-    bod.setVelocity(knockbackDirection.x * knockbackMagnitude, knockbackDirection.y * knockbackMagnitude);
     bod.health -= 2;
+    bod.setTint(0xff0000);
+    this.time.delayedCall(200, () => {
+      bod.clearTint();
+    });
     this.player.hitbox.destroy();
     if (bod.health <= 0) {
       // die
@@ -397,10 +370,10 @@ export default class Boss1 extends Phaser.Scene {
       this.player.update(cursors, zKey, xKey, shiftKey);
     }
 
-    if (this.player.hitbox) {
-      this.player.hitbox.x = this.player.x;
-      this.player.hitbox.y = this.player.y;
-    }
+    // if (this.player.hitbox) {
+    //   this.player.hitbox.x = this.player.x;
+    //   this.player.hitbox.y = this.player.y;
+    // }
 
     // const playerSwordBODOverlap = this.physics.overlap(player.hitbox, bod);
     // if (playerSwordBODOverlap && player.isAttacking) {
@@ -427,7 +400,7 @@ export default class Boss1 extends Phaser.Scene {
     });
 
     this.bod.getChildren().forEach((bod) => {
-      console.log(bod.health);
+      // console.log(bod.health);
       this.physics.add.collider(
         bod,
         this.player.hitbox,
@@ -452,7 +425,7 @@ export default class Boss1 extends Phaser.Scene {
 
       const bodAttackRange = 60;
 
-      if (distance < bodAttackRange && bod.canAttack == true) {
+      if (distance < bodAttackRange && bod.canAttack == true && !this.player.isDead) {
         bod.canAttack = false;
         this.BODSwordAttack(bod);
         this.time.delayedCall(2500, () => {

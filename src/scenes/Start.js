@@ -12,6 +12,7 @@ import { sceneEvents } from "../events/EventCenter";
 let cursors;
 let zKey;
 let xKey;
+let shiftKey;
 let player;
 let skeletons;
 let skeletonAttackCooldown = 1667;
@@ -32,6 +33,7 @@ export default class Start extends Phaser.Scene {
     cursors = this.input.keyboard.createCursorKeys();
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
     const map = this.make.tilemap({ key: "dungeon" });
     const tileset = map.addTilesetImage("dungeon", "tiles", 16, 16);
@@ -76,8 +78,6 @@ export default class Start extends Phaser.Scene {
     });
 
     // this.skeletons.get(200, 250, "skeleton");
-    this.bod.get(200, 150, "bod");
-
 
     // end of enemy code
 
@@ -109,11 +109,13 @@ export default class Start extends Phaser.Scene {
   }
 
   knifeWallCollision(knife, obj2) {
-    this.knives.killAndHide(knife);
+    // this.knives.killAndHide(knife);
+    knife.destroy();
   }
 
   knifeSkeletonCollision(knife, skeleton) {
-    this.knives.killAndHide(knife);
+    // this.knives.killAndHide(knife);
+    knife.destroy();
     skeleton.disableBody(true, true);
     const enemyDeathAnim = this.add.sprite(
       skeleton.x - 45,
@@ -136,6 +138,7 @@ export default class Start extends Phaser.Scene {
       });
     }, 1300);
   }
+
 
   playerCollision(player, skeleton) {
     if (player.isAttacking == true) {
@@ -214,9 +217,10 @@ export default class Start extends Phaser.Scene {
     });
   }
 
+
   update(d, dt) {
     if (this.player) {
-      this.player.update(cursors, zKey, xKey);
+      this.player.update(cursors, zKey, xKey, shiftKey);
     }
 
     this.skeletons.getChildren().forEach((skeleton) => {
@@ -227,9 +231,9 @@ export default class Start extends Phaser.Scene {
         skeleton.y
       );
 
-      const attackRange = 40;
+      const skeletonAttackRange = 40;
 
-      if (distance < attackRange && skeleton.canAttack == true) {
+      if (distance < skeletonAttackRange && skeleton.canAttack == true) {
         skeleton.canAttack = false;
         this.skeletonAttack(skeleton);
         this.time.delayedCall(2500, () => {

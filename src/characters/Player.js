@@ -8,12 +8,10 @@ let walkingDown;
 let playerAttacking = false;
 let playerThrowing = false;
 
-let IDLE = 0;
-let DAMAGE = 1;
-let INVINCIBLE = 2;
-// let ATTACKING = 2;
-// let isAttacking;
-let DEAD;
+const IDLE = 0;
+const DAMAGE = 1;
+const INVINCIBLE = 2;
+const DEAD = 3;
 
 export default class Player extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y, texture, frame) {
@@ -30,6 +28,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.dashSpeed = 2500;
     this.dashDuration = 7500;
     this.hitbox = null;
+    this.isDead = false;
   }
 
   dash() {
@@ -89,7 +88,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this._health--;
     if (this._health <= 0) {
-      // die
+      this.isDead = true;
       this.healthState = DEAD;
       this.setVelocity(dir.x, dir.y);
       this.anims.play("playerHit", true);
@@ -104,10 +103,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.anims.play("playerHit", true);
       this.healthState = DAMAGE;
       this.damageTime = 0;
-
-      // this.healthState = INVINCIBLE;
-      // this.invincibilityTime = 0;
-      // this.startFlashing();
     }
   }
 
@@ -187,32 +182,29 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     playerAttacking = true;
     this.isAttacking = true;
 
-    this.hitbox = this.scene.physics.add.image(this.x, this.y, null).setVisible(false);
+    this.hitbox = this.scene.physics.add
+      .image(this.x, this.y, null)
+      .setVisible(false);
 
     switch (currentDirection) {
       case "down":
         this.anims.play("playerAttackD", true);
-        // this.body.setSize(this.width * 0.25, this.height * 0.6);
-        this.body.offset.y = 16;
-        this.hitbox.setSize(this.width * 0.27, this.height * 0.6);
+        this.hitbox.setOffset(0, 16);
+        this.hitbox.setSize(this.width * 0.25, this.height * 0.74);
         break;
       case "up":
         this.anims.play("playerAttackU");
-        // this.body.setSize(this.width * 0.23, this.height * 0.6);
-        this.body.offset.y = 10;
-        // potential bug ^
-        this.hitbox.setSize(this.width * 0.25, this.height * 0.6);
+        this.hitbox.setOffset(0, 10);
+        this.hitbox.setSize(this.width * 0.23, this.height * 0.6);
         break;
       case "straight":
         this.anims.play("playerAttack");
-        // this.body.setSize(this.width * 0.6, this.height * 0.5);
-        this.body.offset.y = 10;
         if (facingLeft) {
-          this.body.offset.x = 0;
+          this.hitbox.setOffset(0, 10);
         } else {
-          this.body.offset.x = 21;
+          this.hitbox.setOffset(21, 10);
         }
-        this.hitbox.setSize(this.width * 0.62, this.height * 0.5);
+        this.hitbox.setSize(this.width * 0.6, this.height * 0.5);
         break;
     }
 
@@ -221,8 +213,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     this.hitbox.x = this.x;
     this.hitbox.y = this.y;
-
-    
 
     setTimeout(() => {
       playerAttacking = false;
@@ -244,15 +234,12 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           this.healthState = INVINCIBLE;
           this.invincibilityTime = 0;
           this.startFlashing();
-          // this.setTint(0xffffff);
-          // this.damageTime = 0;
         }
         break;
       case INVINCIBLE:
         this.invincibilityTime += dt;
         if (this.invincibilityTime >= this.invincibilityDuration) {
           this.healthState = IDLE;
-          // this.setVisible(true);
           this.setTint(0xffffff);
           this.invincibilityTime = 0;
         }
@@ -270,7 +257,29 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.setFlipX(false);
     }
 
-    if (this.healthState != DAMAGE) {
+    if (this.hitbox) {
+      switch (currentDirection) {
+        case "down":
+          this.hitbox.x = this.x;
+          this.hitbox.y = this.y + 7;
+          break;
+        case "up":
+          this.hitbox.x = this.x;
+          this.hitbox.y = this.y - 8;
+          break;
+        case "straight":
+          if (facingLeft) {
+            this.hitbox.x = this.x - 14;
+            this.hitbox.y = this.y;
+          } else {
+            this.hitbox.x = this.x + 14;
+            this.hitbox.y = this.y;
+          }
+          break;
+      }
+    }
+
+    if (this.healthState != DAMAGE && this._health > 0) {
       if (!playerAttacking) {
         this.body.setSize(this.width * 0.23, this.height * 0.39);
         this.body.offset.x = 21;
@@ -381,7 +390,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         // }
 
         xKey.on("down", () => {
-          if (Phaser.Input.Keyboard.JustDown(xKey)) {
+          if (Phaser.Input.Keyboard.JustDown(xKey) && !this.isDead) {
             this.throwKnife();
             return;
           }
@@ -391,7 +400,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
           if (
             Phaser.Input.Keyboard.JustDown(zKey) &&
             !playerAttacking &&
-            !playerThrowing
+            !playerThrowing &&
+            !this.isDead
           ) {
             this.swordAttack();
 
@@ -450,7 +460,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         });
 
         shiftKey.on("down", () => {
-          if (Phaser.Input.Keyboard.JustDown(shiftKey)) {
+          if (Phaser.Input.Keyboard.JustDown(shiftKey) && !this.isDead) {
             this.dash();
           }
         });
