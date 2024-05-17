@@ -12,6 +12,7 @@ import { sceneEvents } from "../events/EventCenter";
 let cursors;
 let zKey;
 let xKey;
+let shiftKey;
 let player;
 let skeletons;
 let skeletonAttackCooldown = 1667;
@@ -32,6 +33,7 @@ export default class Boss1 extends Phaser.Scene {
     cursors = this.input.keyboard.createCursorKeys();
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
+    shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
     const map = this.make.tilemap({ key: "dungeon" });
     const tileset = map.addTilesetImage("dungeon", "tiles", 16, 16);
@@ -156,9 +158,10 @@ export default class Boss1 extends Phaser.Scene {
   }
 
   knifeBODCollision(knife, bod) {
-    this.knives.killAndHide(knife);
+    // this.knives.killAndHide(knife);
     // knife.disableBody(true, true);
     bod.health--;
+    bod.setVelocity(0, 0);
     console.log("bod health: ", bod.health);
     if (bod.health == 0) {
       bod.disableBody(true, true);
@@ -183,6 +186,7 @@ export default class Boss1 extends Phaser.Scene {
         });
       }, 1300);
     }
+    knife.destroy();
   }
 
   playerCollision(player, skeleton) {
@@ -251,13 +255,17 @@ export default class Boss1 extends Phaser.Scene {
           });
         }, 1300);
       } else {
-        bod.health--;
+        // bod.health--;
+        bod.setTint(0xffffff);
+        this.time.delayedCall(100, () => {
+          bod.clearTint();
+        });
       }
     } else {
       const dx = this.player.x - bod.x;
       const dy = this.player.y - bod.y;
 
-      const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(200);
+      const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(450);
 
       this.player.handleDamage(dir);
 
@@ -309,13 +317,38 @@ export default class Boss1 extends Phaser.Scene {
   BODSwordAttack(bod) {
     bod.isAttacking = true;
     bod.setVelocity(0, 0);
-    const hitbox = this.add.rectangle(
-      bod.x, // Position the hitbox relative to the BOD
-      bod.y,
-      bod.width * 0.9,
-      bod.height * 0.9
-    );
-    this.physics.world.enable(hitbox);
+
+    const hitbox = this.physics.add.image(bod.x, bod.y, null).setVisible(false);
+    hitbox.setSize(bod.width * 0.9, bod.height * 0.9);
+    hitbox.setImmovable(true);
+    hitbox.body.setAllowGravity(false);
+
+    hitbox.x = bod.x;
+    hitbox.y = bod.y;
+
+    const enableHitboxOverlap = () => {
+      const overlapCallback = () => {
+        const dx = this.player.x - bod.x;
+        const dy = this.player.y - bod.y;
+        const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(450);
+
+        this.player.handleDamage(dir);
+        sceneEvents.emit("player-health-changed", this.player.health);
+
+        if (this.player.health <= 0 && this.playerBODCollider) {
+          this.physics.world.removeCollider(this.playerBODCollider);
+          this.playerBODCollider = null;
+        }
+      };
+      this.physics.add.overlap(
+        hitbox,
+        this.player,
+        overlapCallback,
+        null,
+        this
+      );
+    };
+
     this.time.delayedCall(600, () => {
       bod.body.setSize(bod.width * 0.9, bod.height * 0.9);
       bod.body.offset.y = 10;
@@ -324,38 +357,14 @@ export default class Boss1 extends Phaser.Scene {
       } else {
         bod.body.offset.x = -5;
       }
-
-      this.time.addEvent({
-        loop: true,
-        delay: 100, // Adjust the delay based on your animation frame rate
-        callback: () => {
-          const overlap = this.physics.overlap(hitbox, this.player);
-
-          if (overlap) {
-            const dx = this.player.x - bod.x;
-            const dy = this.player.y - bod.y;
-
-            const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(500);
-
-            this.player.handleDamage(dir);
-
-            sceneEvents.emit("player-health-changed", this.player.health);
-
-            if (this.player.health <= 0) {
-              this.physics.world.removeCollider(this.playerBODCollider);
-              this.playerBODCollider = null;
-            }
-          }
-        },
-      });
+      enableHitboxOverlap();
     });
+
     bod.moveEventActive = false;
     bod.anims.play("bodAttack", true);
-    this.time.delayedCall(1500, () => {
+
+    this.time.delayedCall(1000, () => {
       hitbox.destroy();
-      bod.setVelocity(0, 0);
-      bod.moveEventActive = true;
-      bod.anims.play("bodWalk", true);
       bod.body.setSize(bod.width * 0.4, bod.height * 0.6);
       bod.body.offset.y = 38;
       if (bod.facingLeft) {
@@ -363,14 +372,40 @@ export default class Boss1 extends Phaser.Scene {
       } else {
         bod.body.offset.x = 10;
       }
-      bod.isAttacking = true;
     });
+    this.time.delayedCall(1500, () => {
+      bod.setVelocity(0, 0);
+      bod.moveEventActive = true;
+      bod.anims.play("bodWalk", true);
+      bod.isAttacking = false;
+    });
+  }
+
+  handleDamageBOD(bod) {
+    const knockbackDirection = new Phaser.Math.Vector2(this.x - this.player.hitbox.x, this.y - this.player.hitbox.y).normalize();
+    const knockbackMagnitude = 1000; // Adjust as needed
+    bod.setVelocity(knockbackDirection.x * knockbackMagnitude, knockbackDirection.y * knockbackMagnitude);
+    bod.health -= 2;
+    this.player.hitbox.destroy();
+    if (bod.health <= 0) {
+      // die
+    }
   }
 
   update(d, dt) {
     if (this.player) {
-      this.player.update(cursors, zKey, xKey);
+      this.player.update(cursors, zKey, xKey, shiftKey);
     }
+
+    if (this.player.hitbox) {
+      this.player.hitbox.x = this.player.x;
+      this.player.hitbox.y = this.player.y;
+    }
+
+    // const playerSwordBODOverlap = this.physics.overlap(player.hitbox, bod);
+    // if (playerSwordBODOverlap && player.isAttacking) {
+    //   bod.handleDamageBOD();
+    // }
 
     this.skeletons.getChildren().forEach((skeleton) => {
       const distance = Phaser.Math.Distance.Between(
@@ -392,6 +427,22 @@ export default class Boss1 extends Phaser.Scene {
     });
 
     this.bod.getChildren().forEach((bod) => {
+      console.log(bod.health);
+      this.physics.add.collider(
+        bod,
+        this.player.hitbox,
+        this.handleDamageBOD,
+        undefined,
+        this
+      );
+      if (this.player.hitbox) {
+        const playerSwordBODOverlap = this.physics.overlap(this.player.hitbox, bod);
+        if (playerSwordBODOverlap 
+          // && this.player.isAttacking
+           ) {
+          this.handleDamageBOD(bod);
+        }
+      }
       const distance = Phaser.Math.Distance.Between(
         this.player.x,
         this.player.y,
