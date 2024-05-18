@@ -42,7 +42,13 @@ const createEnemyAnims = (anims) => {
       key: "bodAttack",
       frames: anims.generateFrameNumbers("bod", { start: 16, end: 25 }),
       frameRate: 7,
-      repeat: -1,
+      repeat: 0,
+    });
+    anims.create({
+      key: "bodDisappear",
+      frames: anims.generateFrameNumbers("bod", { start: 28, end: 38 }),
+      frameRate: 8,
+      repeat: 0,
     });
 
   };
