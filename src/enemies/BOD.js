@@ -14,8 +14,16 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
     this.isDamaged = false;
     this.isAttacking = false;
     this.player = player;
-    this.facingLeft = null;
+    this.facingLeft = true;
+    this.phase2Running = false;
+    this.phase3Running = false;
+    this.isDisappearing = false;
     this.health = 30;
+    this.maxHealth = 30;
+    this.phase2Cycle1Complete = false;
+    this.phase2Cycle2Complete = false;
+    this.phase3Cycle1Complete = false;
+    this.phase3Cycle2Complete = false;
 
     this.anims.play("bodWalk", true);
 
@@ -46,8 +54,17 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
   preUpdate(t, dt) {
     super.preUpdate(t, dt);
 
-    const speed = 30;
     const player = this.scene.player;
+
+    if (this.isAttacking) {
+      this.setVelocity(0, 0);
+    }
+
+    if (player.isDead) {
+      this.setVelocity(0, 0);
+    }
+
+    const speed = 30;
 
     if (!player.isDead) {
       const dx = player.x - this.x;
@@ -63,19 +80,19 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
 
       switch (this.direction) {
         case UP:
-          if (!this.isAttacking) {
+          if (!this.isAttacking && !this.phase2Running && !this.phase3Running) {
             this.setVelocity(0, -speed);
           }
           break;
         case DOWN:
-          if (!this.isAttacking) {
+          if (!this.isAttacking && !this.phase2Running && !this.phase3Running) {
             this.setVelocity(0, speed);
           }
           break;
         case LEFT:
           this.setFlipX(false);
           this.facingLeft = true;
-          if (!this.isAttacking) {
+          if (!this.isAttacking && !this.phase2Running && !this.phase3Running) {
             this.body.offset.x = 76;
             this.setVelocity(-speed, 0);
           }
@@ -83,7 +100,7 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
         case RIGHT:
           this.setFlipX(true);
           this.facingLeft = false;
-          if (!this.isAttacking) {
+          if (!this.isAttacking && !this.phase2Running && !this.phase3Running) {
             this.body.offset.x = 10;
             this.setVelocity(speed, 0);
           }
@@ -106,12 +123,13 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
 
   handleDamage() {
     if (!this.phase2Running && !this.isDisappearing) {
-      this.health -= 2;
+      // this.health -= 2;
+
       this.setTint(0xff0000);
       this.scene.time.delayedCall(200, () => {
         this.clearTint();
       });
-  
+
       if (this.health <= 0) {
         this.die();
       } else {
@@ -122,91 +140,173 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
 
   checkPhase() {
     if (this.health <= 20 && this.health > 16) {
-      this.phase2Behavior(3, 16);
+      if (!this.phase2Cycle1Complete) {
+        this.phase2Behavior(3, 16);
+        this.phase2Cycle1Complete = true;
+      }
     } else if (this.health <= 16 && this.health > 11) {
-      this.phase2Behavior(3, 11);
+      if (!this.phase2Cycle2Complete) {
+        this.phase2Behavior(3, 11);
+        this.phase2Cycle2Complete = true;
+      }
+    } else if (this.health <= 10 && this.health > 5) {
+      if (!this.phase3Cycle1Complete) {
+        this.phase3Behavior(3, 5);
+        this.phase3Cycle1Complete = true;
+      }
+    } else if (this.health <= 5 && this.health > 0) {
+      if (!this.phase3Cycle2Complete) {
+        this.phase3Behavior(3, 0);
+        this.phase3Cycle2Complete = true;
+      }
     }
   }
-  
+
   phase2Behavior(repeats, nextThreshold) {
     if (this.phase2Running) {
       return;
     }
+    this.setVelocity(0, 0);
     this.phase2Running = true;
-  
+
+    let spawnLeft = false;
+
     const disappearAndAttack = (remainingRepeats) => {
       if (remainingRepeats <= 0 || this.health <= nextThreshold) {
         this.phase2Running = false;
+        this.isDisappearing = false;
         return;
       }
-  
-      this.isAttacking = true;
+
+      // this.isAttacking = true;
+      this.isDisappearing = true;
       this.anims.play("bodDisappear", true);
       this.scene.time.delayedCall(1000, () => {
-        this.setVisible(false);
+        this.disableBody(true, true);
+
         this.scene.time.delayedCall(1000, () => {
-          const spawnLeft = Phaser.Math.Between(0, 1) === 0;
-          const offset = 100;
-          if (spawnLeft) {
-            this.setPosition(this.player.x - offset, this.player.y);
-          } else {
-            this.setPosition(this.player.x + offset, this.player.y);
-          }
-          this.setVisible(true);
-          this.anims.play("bodAttack", true);
-          this.scene.time.delayedCall(1000, () => {
+          const spawnX = spawnLeft ? this.player.x - 100 : this.player.x + 100;
+          this.setPosition(spawnX, this.player.y);
+          this.enableBody(true, this.x, this.y, true, true);
+          this.anims.play("bodAppear", true);
+          this.scene.time.delayedCall(735, () => {
+            this.swordAttack(this.player);
+          });
+          this.scene.time.delayedCall(1430, () => {
             this.isAttacking = false;
+            disappearAndAttack(remainingRepeats - 1);
+            this.anims.timeScale = 1;
+          });
+          spawnLeft = !spawnLeft;
+        });
+      });
+    };
+
+    disappearAndAttack(repeats);
+  }
+
+  phase3Behavior(repeats, nextThreshold) {
+    if (this.phase3Running) {
+      return;
+    }
+    this.setVelocity(0, 0);
+    this.phase3Running = true;
+    this.anims.play("bodDisappear", true);
+
+    const disappearAndAttack = (remainingRepeats) => {
+      if (remainingRepeats <= 0 || this.health <= nextThreshold) {
+        this.setScale(1);
+        this.enableBody(true, this.x, this.y, true, true);
+        this.anims.play("bodAppear", true);
+        this.scene.time.delayedCall(735, () => {
+          this.phase3Running = false;
+          this.isDisappearing = false;
+          this.anims.play("bodWalk", true);
+        });
+        return;
+      }
+
+      this.isDisappearing = true;
+      this.scene.time.delayedCall(1000, () => {
+        this.disableBody(true, true);
+        this.setScale(2);
+
+        this.scene.time.delayedCall(1000, () => {
+          const portalAnim = this.scene.add.sprite(
+            this.player.x - 135,
+            this.player.y - 160,
+            "bodPortal"
+          );
+          portalAnim.setOrigin(0, 0);
+          portalAnim.setScale(2);
+          portalAnim.anims.play("bodPortal", true);
+          const fistHitbox = this.scene.physics.add
+            .image(this.player.x - 10, this.player.y - 30, null)
+            .setVisible(false);
+          fistHitbox.setSize(this.width * 0.38, this.height * 1.2);
+          fistHitbox.setImmovable(true);
+          fistHitbox.body.setAllowGravity(false);
+
+          const enableHitboxOverlap = () => {
+            const overlapCallback = () => {
+              const dx = this.player.x - this.x;
+              const dy = this.player.y - this.y;
+              const dir = new Phaser.Math.Vector2(dx, dy)
+                .normalize()
+                .scale(450);
+
+              this.player.handleDamage(dir);
+              sceneEvents.emit("player-health-changed", this.player.health);
+
+              if (this.player.health <= 0) {
+                this.scene.physics.world.removeCollider(
+                  this.scene.playerBODCollider
+                );
+                this.scene.playerBODCollider = null;
+              }
+            };
+            this.scene.physics.add.overlap(
+              fistHitbox,
+              this.player,
+              overlapCallback,
+              null,
+              this
+            );
+          };
+
+          this.scene.time.delayedCall(600, () => {
+            enableHitboxOverlap();
+          });
+          this.scene.time.delayedCall(1067, () => {
+            portalAnim.destroy();
+            fistHitbox.destroy();
             disappearAndAttack(remainingRepeats - 1);
           });
         });
       });
     };
-  
-    disappearAndAttack(repeats);
-  }
 
-  disappear() {
-    this.isDisappearing = true;
-    this.setActive(false);
-    this.setVisible(false);
-    this.hitbox.destroy();
-    this.scene.time.delayedCall(1000, () => {
-      this.reappear();
-    });
-  }
-  
-  reappear() {
-    this.isDisappearing = false;
-    this.setActive(true);
-    this.setVisible(true);
-    // Add the hitbox back
-    this.hitbox = this.scene.physics.add.sprite(this.x, this.y, null).setVisible(false);
-    this.hitbox.setSize(this.width * 0.4, this.height * 0.6);
-    this.hitbox.setImmovable(true);
-    this.hitbox.body.setAllowGravity(false);
+    disappearAndAttack(repeats);
   }
 
   die() {
     this.disableBody(true, true);
     const enemyDeathAnim = this.scene.add.sprite(
-      this.x - 45,
-      this.y - 15,
-      "enemyDeath"
+      this.x,
+      this.y,
+      "bodDisappear"
     );
     if (this.facingLeft) {
       enemyDeathAnim.setFlipX(true);
     }
-    enemyDeathAnim.setOrigin(0, 0);
-    enemyDeathAnim.anims.play("enemyDeath", true);
-    this.scene.time.delayedCall(1300, () => {
-      this.scene.tweens.add({
-        targets: enemyDeathAnim,
-        alpha: 0,
-        duration: 1000,
-        onComplete: () => {
-          enemyDeathAnim.destroy();
-        },
-      });
+    enemyDeathAnim.anims.timeScale = 0.8;
+    this.direction = LEFT;
+    enemyDeathAnim.anims.play("bodDisappear", true);
+    this.scene.time.delayedCall(1250, () => {
+      enemyDeathAnim.destroy();
+      const explosion = this.scene.add.sprite(this.x + 35 , this.y + 20, "bodExplosion");
+      explosion.setScale(1.3);
+      explosion.anims.play("bodExplosion", true);
     });
   }
 
@@ -248,6 +348,11 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
       enableHitboxOverlap();
     });
 
+    if (this.phase2Running) {
+      this.anims.timeScale = 1.75;
+    } else {
+      this.anims.timeScale = 1;
+    }
     this.anims.play("bodAttack", true);
 
     this.scene.time.delayedCall(1000, () => {
@@ -259,8 +364,10 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
 
     this.scene.time.delayedCall(1500, () => {
       this.setVelocity(0, 0);
-      this.anims.play("bodWalk", true);
       this.isAttacking = false;
+      if (!this.phase2Running) {
+        this.anims.play("bodWalk", true);
+      }
     });
   }
 }

@@ -2,7 +2,6 @@ import Phaser from "phaser";
 import { debugDraw } from "../utils/debug";
 import { createEnemyAnims } from "../anims/EnemyAnims";
 import { createPlayerAnims } from "../anims/PlayerAnims";
-import Skeleton from "../enemies/Skeleton";
 import BOD from "../enemies/BOD";
 import "../characters/Player";
 import { sceneEvents } from "../events/EventCenter";
@@ -17,6 +16,14 @@ export default class Boss1 extends Phaser.Scene {
   constructor() {
     super("boss1");
     this.player = null;
+    this.wallsLayer = null;
+    this.lockedDoor = null;
+    this.openDoor = null;
+    this.healthInitialized = false;
+    this.bossHealthBar = null;
+    this.bossNameText = null;
+    this.bossIntroComplete = false;
+    this.hasBossIntro = true;
   }
 
   preload() {}
@@ -36,29 +43,28 @@ export default class Boss1 extends Phaser.Scene {
 
     map.createLayer("Ground", tileset);
     map.createLayer("Gracias", tileset);
-    const wallsLayer = map.createLayer("Walls", tileset);
-    map.createLayer("Open_Door", tileset);
-    map.createLayer("Locked_Door", tileset);
-    
-    wallsLayer.setCollisionByProperty({ collides: true });
-    debugDraw(wallsLayer, this);
+    this.wallsLayer = map.createLayer("Walls", tileset);
+    this.openDoor = map.createLayer("Open_Door", tileset);
+    this.lockedDoor = map.createLayer("Locked_Door", tileset);
+
+    this.wallsLayer.setCollisionByProperty({ collision: true });
+    this.openDoor.setCollisionByProperty({ collision: true });
+    this.lockedDoor.setCollisionByProperty({ collision: true });
+    debugDraw(this.wallsLayer, this);
 
     this.knives = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
     });
 
-    this.player = this.add.player(400, 450, "player", cursors);
+    this.player = this.add.player(1001, 610, "player", cursors);
+
     this.player.setKnives(this.knives);
 
-    this.cameras.main.startFollow(this.player, true);
+    if (window.globalPlayerData) {
+      this.player.health = window.globalPlayerData.health;
+    }
 
-    this.skeletons = this.physics.add.group({
-      classType: Skeleton,
-      createCallback: (go) => {
-        const skelGo = go;
-        skelGo.body.onCollide = true;
-      },
-    });
+    this.cameras.main.startFollow(this.player, true);
 
     this.bod = this.physics.add.group({
       classType: BOD,
@@ -68,23 +74,30 @@ export default class Boss1 extends Phaser.Scene {
       },
     });
 
-    this.bod.get(180, 200, "bod", this.player);
+    this.time.delayedCall(6000, () => {
+      const bodAppearAnim = this.add.sprite(
+        970,
+        450,
+        "bodAppear"
+      );
+      bodAppearAnim.anims.play("bodAppear", true);
+      this.time.delayedCall(1000, () => {
+        bodAppearAnim.destroy();
+        this.bod.get(970, 450, "bod", this.player);
+      });
+    });
 
-    this.physics.add.collider(this.player, wallsLayer);
-    this.physics.add.collider(this.skeletons, wallsLayer);
-    this.physics.add.collider(this.bod, wallsLayer);
-
-    this.physics.add.collider(
-      this.knives,
-      wallsLayer,
-      this.knifeWallCollision,
-      undefined,
-      this
+    this.physics.add.collider(this.player, this.wallsLayer);
+    this.playerLockedDoorCollider = this.physics.add.collider(
+      this.player,
+      this.lockedDoor
     );
+    this.physics.add.collider(this.bod, this.wallsLayer);
+
     this.physics.add.collider(
       this.knives,
-      this.skeletons,
-      this.knifeSkeletonCollision,
+      this.wallsLayer,
+      this.knifeWallCollision,
       undefined,
       this
     );
@@ -96,14 +109,6 @@ export default class Boss1 extends Phaser.Scene {
       this
     );
 
-    this.playerEnemyCollider = this.physics.add.collider(
-      this.player,
-      this.skeletons,
-      this.playerCollision,
-      undefined,
-      this
-    );
-
     this.playerBODCollider = this.physics.add.collider(
       this.player,
       this.bod,
@@ -111,33 +116,116 @@ export default class Boss1 extends Phaser.Scene {
       undefined,
       this
     );
+
+    this.createBossUI();
+
+    this.fadeInBossUI();
+  }
+
+  createBossUI() {
+    this.bossHealthBar = this.add.graphics();
+    this.updateBossHealthBar(100, 100);
+    this.bossHealthBar.setDepth(1);
+
+    this.bossNameText = this.add.text(10, 30, "KRALIN", {
+      fontSize: "16px",
+      fill: "#fff",
+    });
+    this.bossNameText.setDepth(1);
+
+    this.bossTitleText = this.add.text(0, 0, "GUARDIAN OF THE LAWN MOWER", {
+      fontSize: "11px",
+      fill: "#fff",
+    });
+    this.bossTitleText.setDepth(1);
+
+    this.bossHealthBar.setAlpha(0);
+    this.bossNameText.setAlpha(0);
+    this.bossTitleText.setAlpha(0);
+  }
+
+  fadeInBossUI() {
+    this.time.delayedCall(1000, () => {
+      this.tweens.add({
+        targets: [this.bossNameText],
+        alpha: 1,
+        duration: 2000,
+        ease: "Power2",
+      });
+    });
+    this.time.delayedCall(3000, () => {
+      this.tweens.add({
+        targets: [this.bossTitleText],
+        alpha: 1,
+        duration: 2000,
+        ease: "Power2",
+      });
+    });
+    this.time.delayedCall(5000, () => {
+      this.tweens.add({
+        targets: [this.bossHealthBar],
+        alpha: 1,
+        duration: 2000,
+        ease: "Power2",
+      });
+    });
+    this.time.delayedCall(6000, () => {
+      this.bossIntroComplete = true;
+    });
+  }
+
+  fadeOutBossUI() {
+    this.tweens.add({
+      targets: [this.bossHealthBar, this.bossNameText, this.bossTitleText],
+      alpha: 0,
+      duration: 2000,
+      ease: "Power2",
+    });
+  }
+
+  updateBossHealthBar(currentHealth, maxHealth) {
+    const healthRatio = currentHealth / maxHealth;
+    this.bossHealthBar.clear();
+
+    this.bossHealthBar.fillStyle(0x000000, 0.5);
+    this.bossHealthBar.fillRect(0, 0, 200, 13);
+
+    this.bossHealthBar.fillStyle(0xff0000, 1);
+    this.bossHealthBar.fillRect(0, 0, 200 * healthRatio, 10);
+    this.bossHealthBar.setDepth(1);
+  }
+
+  updateBossUIPosition() {
+    const playerCenterX = this.player.x;
+    const playerCenterY = this.player.y;
+    const offsetY = -111;
+
+    this.bossHealthBar.setPosition(
+      playerCenterX - 100,
+      playerCenterY + offsetY + 20
+    );
+    this.bossNameText.setPosition(
+      playerCenterX - this.bossNameText.width / 2,
+      playerCenterY + offsetY - 10
+    );
+    this.bossTitleText.setPosition(
+      playerCenterX - this.bossTitleText.width / 2,
+      playerCenterY + offsetY + 5
+    );
   }
 
   knifeWallCollision(knife) {
     knife.destroy();
   }
 
-  knifeSkeletonCollision(knife, skeleton) {
-    skeleton.handleDamage();
-    knife.destroy();
-  }
-
   knifeBODCollision(knife, bod) {
-    bod.handleDamage();
-    // knife.killAndHide();
-    knife.destroy();
-  }
-
-  playerCollision(player, enemy) {
-    const dx = player.x - enemy.x;
-    const dy = player.y - enemy.y;
-    const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(200);
-    player.handleDamage(dir);
-    sceneEvents.emit("player-health-changed", player.health);
-
-    if (player.health <= 0) {
-      this.playerEnemyCollider.destroy();
+    if (!bod.isDisappearing) {
+      bod.health--;
+      bod.handleDamage();
     }
+    knife.destroy();
+    bod.setVelocity(0, 0);
+    this.updateBossHealthBar(bod.health, bod.maxHealth);
   }
 
   playerBODCollision(player, bod) {
@@ -152,44 +240,9 @@ export default class Boss1 extends Phaser.Scene {
     }
   }
 
-  skeletonAttack(skeleton) {
-    if (this.player.x > skeleton.x) {
-      skeleton.setFlipX(false);
-    } else {
-      skeleton.setFlipX(true);
-    }
-
-    this.time.delayedCall(600, () => {
-      const dx = this.player.x - skeleton.x;
-      const dy = this.player.y - skeleton.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const normalizedDx = dx / distance;
-      const normalizedDy = dy / distance;
-      const lungeDistance = 900;
-      const lungeDx = normalizedDx * lungeDistance;
-      const lungeDy = normalizedDy * lungeDistance;
-      skeleton.setVelocity(lungeDx, lungeDy);
-
-      skeleton.body.setSize(skeleton.width * 0.6, skeleton.height * 0.71);
-      skeleton.body.offset.y = 10;
-      if (this.player.x > skeleton.x) {
-        skeleton.body.offset.x = 15;
-      } else {
-        skeleton.body.offset.x = 5;
-      }
-    });
-
-    skeleton.moveEventActive = false;
-    skeleton.setVelocity(0, 0);
-    skeleton.anims.play("enemyAttack", true);
-
-    this.time.delayedCall(1667, () => {
-      skeleton.moveEventActive = true;
-      skeleton.anims.play("enemyWalk", true);
-      skeleton.body.setSize(skeleton.width * 0.6, skeleton.height * 0.6);
-      skeleton.body.offset.y = 13;
-      skeleton.body.offset.x = 5;
-    });
+  nextLevel() {
+    window.globalPlayerData.health = this.player.health;
+    this.scene.start("start");
   }
 
   update(d, dt) {
@@ -197,30 +250,41 @@ export default class Boss1 extends Phaser.Scene {
       this.player.update(cursors, zKey, xKey, shiftKey);
     }
 
-    this.skeletons.getChildren().forEach((skeleton) => {
-      const distance = Phaser.Math.Distance.Between(
-        this.player.x,
-        this.player.y,
-        skeleton.x,
-        skeleton.y
-      );
-
-      const skeletonAttackRange = 40;
-
-      if (distance < skeletonAttackRange && skeleton.canAttack) {
-        skeleton.canAttack = false;
-        this.skeletonAttack(skeleton);
-        this.time.delayedCall(2500, () => {
-          skeleton.canAttack = true;
-        });
-      }
-    });
+    if (!this.healthInitialized) {
+      sceneEvents.emit("player-health-changed", this.player.health);
+      this.healthInitialized = true;
+    }
 
     this.bod.getChildren().forEach((bod) => {
-      if (
+      // console.log(bod.health);
+
+      if (bod.health <= 0) {
+        if (this.playerLockedDoorCollider) {
+          this.playerLockedDoorCollider.destroy();
+          this.playerLockedDoorCollider = null;
+        }
+        if (this.lockedDoor) {
+          this.lockedDoor.destroy();
+          this.lockedDoor = null;
+        }
+        this.physics.add.collider(
+          this.player,
+          this.openDoor,
+          this.nextLevel,
+          null,
+          this
+        );
+
+        this.fadeOutBossUI();
+
+        this.time.delayedCall(1250, () => {
+          if (bod) {
+            bod.destroy();
+          }
+        });
+      } else if (
         !bod.phase2Running &&
         !bod.isDisappearing &&
-        bod.canAttack &&
         !this.player.isDead
       ) {
         const distance = Phaser.Math.Distance.Between(
@@ -232,26 +296,22 @@ export default class Boss1 extends Phaser.Scene {
 
         const bodAttackRange = 60;
 
-        if (distance < bodAttackRange) {
-          this.physics.add.collider(
-            bod,
+        if (this.player.hitbox && !bod.isDisappearing) {
+          this.physics.add.overlap(
             this.player.hitbox,
-            () => bod.handleDamage(),
-            undefined,
+            bod,
+            () => {
+              bod.health -= 2;
+              bod.handleDamage();
+              this.player.hitbox.destroy();
+              this.updateBossHealthBar(bod.health, bod.maxHealth);
+            },
+            null,
             this
           );
+        }
 
-          if (this.player.hitbox) {
-            const playerSwordBODOverlap = this.physics.overlap(
-              this.player.hitbox,
-              bod
-            );
-            if (playerSwordBODOverlap) {
-              bod.handleDamage();
-              console.log("hit")
-            }
-          }
-
+        if (distance < bodAttackRange) {
           if (bod.canAttack) {
             bod.canAttack = false;
             bod.swordAttack(this.player);
@@ -263,6 +323,6 @@ export default class Boss1 extends Phaser.Scene {
       }
     });
 
-  
+    this.updateBossUIPosition();
   }
 }

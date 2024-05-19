@@ -14,7 +14,8 @@ export default class Preloader extends Phaser.Scene {
 
         this.load.tilemapTiledJSON("dungeon", "./tiles/dungeon-01.json");
         this.load.tilemapTiledJSON("dungeon_tiles_too", "./tiles/boss-room-1.json");
-
+        this.load.tilemapTiledJSON("dungeon_tiles_quatro", "./tiles/dungeon-02.json");
+        
         this.load.image("uiHeartFull", "ui/heart.png");
         this.load.image("uiHeartEmpty", "ui/heart_background.png");
         this.load.image("uiHeartStroke", "ui/heart_border.png");
@@ -72,6 +73,10 @@ export default class Preloader extends Phaser.Scene {
         this.load.spritesheet("bod", "enemies/Bringer-of-Death-Spritesheet.png", {
           frameWidth: 140,
           frameHeight: 93,
+        });
+        this.load.spritesheet("explosions", "enemies/explosion-spritesheet.png", {
+          frameWidth: 64,
+          frameHeight: 64,
         });
     }
 
