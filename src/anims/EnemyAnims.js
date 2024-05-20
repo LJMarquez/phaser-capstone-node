@@ -69,6 +69,43 @@ const createEnemyAnims = (anims) => {
     frameRate: 10,
     repeat: 0,
   });
+
+  anims.create({
+    key: "morshuWalkD",
+    frames: anims.generateFrameNumbers("morshu", { start: 0, end: 3 }),
+    frameRate: 5,
+    repeat: -1,
+  });
+  anims.create({
+    key: "morshuWalk",
+    frames: anims.generateFrameNumbers("morshu", { start: 4, end: 7 }),
+    frameRate: 5,
+    repeat: -1,
+  });
+  anims.create({
+    key: "morshuWalkU",
+    frames: anims.generateFrameNumbers("morshu", { start: 8, end: 11 }),
+    frameRate: 5,
+    repeat: -1,
+  });
+  anims.create({
+    key: "morshuThrowD",
+    frames: anims.generateFrameNumbers("morshu", { start: 12, end: 14 }),
+    frameRate: 5,
+    repeat: 0,
+  });
+  anims.create({
+    key: "morshuThrow",
+    frames: anims.generateFrameNumbers("morshu", { start: 15, end: 17 }),
+    frameRate: 5,
+    repeat: 0,
+  });
+  anims.create({
+    key: "morshuDeath",
+    frames: anims.generateFrameNumbers("morshu", { start: 18, end: 23 }),
+    frameRate: 5,
+    repeat: 0,
+  });
 };
 
 export { createEnemyAnims };

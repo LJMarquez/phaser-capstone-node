@@ -133,6 +133,15 @@ export default class Start extends Phaser.Scene {
     }
 
     if (!this.healthInitialized) {
+      if (window.globalPlayerData.hasLawnMower === true) {
+        sceneEvents.emit("collect-lawn-mower");
+      }
+      if (window.globalPlayerData.hasDrill === true) {
+        sceneEvents.emit("collect-drill");
+      }
+      if (window.globalPlayerData.hasWrench === true) {
+        sceneEvents.emit("collect-wrench");
+      }
       sceneEvents.emit("player-health-changed", this.player.health);
       this.healthInitialized = true;
     }

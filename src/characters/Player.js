@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { sceneEvents } from "../events/EventCenter";
 
 let facingLeft = false;
 let currentDirection = "up";
@@ -24,11 +25,13 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.invincibilityDuration = 1500;
     this.canDash = true;
     this.dashCooldown = 750;
-    this.dashSpeed = 3000;
+    this.dashSpeed = 600;
     this.dashDuration = 100;
     this.hitbox = null;
     this.isDead = false;
     this._health = 3;
+
+    this.isDashing = false;
 
     this.scene.physics.world.enable(this);
     this.scene.add.existing(this);
@@ -39,46 +42,53 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
+    this.scene.playerDashAudio.play();
+
     this.canDash = false;
 
-    const originalPosition = { x: this.x, y: this.y };
+    this.isDashing = true;
 
-    switch (currentDirection) {
-      case "down":
-        this.setVelocity(0, this.dashSpeed);
-        break;
-      case "up":
-        this.setVelocity(0, -this.dashSpeed);
-        break;
-      case "straight":
-        this.setVelocity(facingLeft ? -this.dashSpeed : this.dashSpeed, 0);
-        break;
-    }
+    // const originalPosition = { x: this.x, y: this.y };
 
+    // switch (currentDirection) {
+    //   case "down":
+    //     this.setVelocity(0, this.dashSpeed);
+    //     break;
+    //   case "up":
+    //     this.setVelocity(0, -this.dashSpeed);
+    //     break;
+    //   case "straight":
+    //     this.setVelocity(facingLeft ? -this.dashSpeed : this.dashSpeed, 0);
+    //     break;
+    // }
+
+    // this.scene.time.delayedCall(this.dashDuration, () => {
+    //   this.setVelocity(0, 0);
+
+    //   const tileX = this.scene.wallsLayer.worldToTileX(this.x);
+    //   const tileY = this.scene.wallsLayer.worldToTileY(this.y);
+    //   const tiles = this.scene.wallsLayer.getTilesWithinWorldXY(
+    //     this.x,
+    //     this.y,
+    //     1,
+    //     1
+    //   );
+
+    //   const collidingTile = tiles.find(
+    //     (tile) => tile.properties.collision === true
+    //   );
+
+    //   if (collidingTile) {
+    //     this.setPosition(originalPosition.x, originalPosition.y);
+    //   }
     this.scene.time.delayedCall(this.dashDuration, () => {
-      this.setVelocity(0, 0);
-
-      const tileX = this.scene.wallsLayer.worldToTileX(this.x);
-      const tileY = this.scene.wallsLayer.worldToTileY(this.y);
-      const tiles = this.scene.wallsLayer.getTilesWithinWorldXY(
-        this.x,
-        this.y,
-        1,
-        1
-      );
-
-      const collidingTile = tiles.find(
-        (tile) => tile.properties.collision === true
-      );
-
-      if (collidingTile) {
-        this.setPosition(originalPosition.x, originalPosition.y);
-      }
-
-      this.scene.time.delayedCall(this.dashCooldown, () => {
-        this.canDash = true;
-      });
+      this.isDashing = false;
     });
+
+    this.scene.time.delayedCall(this.dashCooldown, () => {
+      this.canDash = true;
+    });
+    // });
   }
 
   setKnives(knives) {
@@ -149,47 +159,54 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    if (!playerThrowing) {
-      if (
-        currentDirection == "down" ||
-        currentDirection == "up" ||
-        currentDirection == "straight"
-      ) {
-        const vec = new Phaser.Math.Vector2(0, 0);
-        playerThrowing = true;
+    this.scene.playerKnifeAudio.stop();
+    this.scene.playerKnifeAudio.play();
 
-        switch (currentDirection) {
-          case "down":
-            this.anims.play("playerThrowD", true);
-            vec.y = 1;
-            break;
-          case "up":
-            this.anims.play("playerThrowU");
-            vec.y = -1;
-            break;
-          case "straight":
-            this.anims.play("playerThrow");
-            vec.x = facingLeft ? -1 : 1;
-            break;
+    if (window.globalPlayerData.knives > 0) {
+      if (!playerThrowing) {
+        window.globalPlayerData.knives--;
+        sceneEvents.emit("update-knives-count");
+        if (
+          currentDirection == "down" ||
+          currentDirection == "up" ||
+          currentDirection == "straight"
+        ) {
+          const vec = new Phaser.Math.Vector2(0, 0);
+          playerThrowing = true;
+
+          switch (currentDirection) {
+            case "down":
+              this.anims.play("playerThrowD", true);
+              vec.y = 1;
+              break;
+            case "up":
+              this.anims.play("playerThrowU");
+              vec.y = -1;
+              break;
+            case "straight":
+              this.anims.play("playerThrow");
+              vec.x = facingLeft ? -1 : 1;
+              break;
+          }
+          const angle = vec.angle();
+          const knife = this.knives.get(this.x, this.y, "knife");
+
+          setTimeout(function () {
+            knife.setActive(true);
+            knife.setVisible(true);
+
+            knife.setRotation(angle);
+
+            knife.x += vec.x * 16;
+            knife.y += vec.y * 16;
+
+            knife.setVelocity(vec.x * 300, vec.y * 300);
+          }, 180);
+
+          setTimeout(function () {
+            playerThrowing = false;
+          }, 267);
         }
-        const angle = vec.angle();
-        const knife = this.knives.get(this.x, this.y, "knife");
-
-        setTimeout(function () {
-          knife.setActive(true);
-          knife.setVisible(true);
-
-          knife.setRotation(angle);
-
-          knife.x += vec.x * 16;
-          knife.y += vec.y * 16;
-
-          knife.setVelocity(vec.x * 300, vec.y * 300);
-        }, 180);
-
-        setTimeout(function () {
-          playerThrowing = false;
-        }, 267);
       }
     }
   }
@@ -197,6 +214,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   swordAttack() {
     playerAttacking = true;
     this.isAttacking = true;
+
+    this.scene.playerAttackAudio.stop();
+    this.scene.playerAttackAudio.play();
 
     this.hitbox = this.scene.physics.add
       .image(this.x, this.y, null)
@@ -330,29 +350,44 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       }
 
       if (this.healthState == IDLE || this.healthState == INVINCIBLE) {
-
         if (walkingX) {
           if (!playerAttacking && !playerThrowing) {
             this.anims.play("playerWalk", true);
           }
           currentDirection = "straight";
           if (facingLeft) {
-            this.setVelocity(-100, 0);
+            if (this.isDashing) {
+              this.setVelocity(-this.dashSpeed, 0);
+            } else {
+              this.setVelocity(-100, 0);
+            }
           } else {
-            this.setVelocity(100, 0);
+            if (this.isDashing) {
+              this.setVelocity(this.dashSpeed, 0);
+            } else {
+              this.setVelocity(100, 0);
+            }
           }
         } else if (walkingUp) {
           if (!playerAttacking && !playerThrowing) {
             this.anims.play("playerWalkU", true);
           }
           currentDirection = "up";
-          this.setVelocity(0, -100);
+          if (this.isDashing) {
+            this.setVelocity(0, -this.dashSpeed);
+          } else {
+            this.setVelocity(0, -100);
+          }
         } else if (walkingDown) {
           if (!playerAttacking && !playerThrowing) {
             this.anims.play("playerWalkD", true);
           }
           currentDirection = "down";
-          this.setVelocity(0, 100);
+          if (this.isDashing) {
+            this.setVelocity(0, this.dashSpeed);
+          } else {
+            this.setVelocity(0, 100);
+          }
         }
 
         xKey.on("down", () => {

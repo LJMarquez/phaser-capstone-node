@@ -5,10 +5,16 @@ import Preloader from "./scenes/Preloader";
 import Start from "./scenes/Start";
 import Maze1 from "./scenes/Maze1";
 import Boss1 from "./scenes/Boss1";
+import Maze2 from "./scenes/Maze2";
+import Boss2 from "./scenes/Boss2";
 import GameUI from "./scenes/GameUI";
 
 window.globalPlayerData = {
   health: 3,
+  hasWrench: false,
+  hasDrill: false,
+  hasLawnMower: false,
+  knives: 100,
 };
 
 export default new Phaser.Game({
@@ -22,7 +28,7 @@ export default new Phaser.Game({
       debug: true,
     },
   },
-  scene: [Preloader, Start, Maze1, Boss1, GameUI],
+  scene: [Preloader, Start, Maze1, Boss1, Maze2, Boss2, GameUI],
   scale: {
     autoCenter: Phaser.Scale.CENTER_BOTH,
     zoom: 2.5,

@@ -36,7 +36,12 @@ export default class Maze1 extends Phaser.Scene {
     shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
     const map = this.make.tilemap({ key: "dungeon_tiles_quatro" });
-    const tileset = map.addTilesetImage("dungeon_tiles_quatro", "tiles4", 16, 16);
+    const tileset = map.addTilesetImage(
+      "dungeon_tiles_quatro",
+      "tiles4",
+      16,
+      16
+    );
 
     map.createLayer("Ground", tileset);
     // map.createLayer("Gracias", tileset);
@@ -71,10 +76,9 @@ export default class Maze1 extends Phaser.Scene {
     });
 
     this.skeletons.get(300, 150, "skeleton");
-    
+
     this.skeletons.get(520, 1350, "skeleton");
     this.skeletons.get(200, 150, "skeleton");
-
 
     this.physics.add.collider(this.player, this.wallsLayer);
     // this.playerLockedDoorCollider = this.physics.add.collider(
@@ -138,6 +142,15 @@ export default class Maze1 extends Phaser.Scene {
     }
 
     if (!this.healthInitialized) {
+      if (window.globalPlayerData.hasLawnMower === true) {
+        sceneEvents.emit("collect-lawn-mower");
+      }
+      if (window.globalPlayerData.hasDrill === true) {
+        sceneEvents.emit("collect-drill");
+      }
+      if (window.globalPlayerData.hasWrench === true) {
+        sceneEvents.emit("collect-wrench");
+      }
       sceneEvents.emit("player-health-changed", this.player.health);
       this.healthInitialized = true;
     }

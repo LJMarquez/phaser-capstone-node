@@ -123,7 +123,8 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
 
   handleDamage() {
     if (!this.phase2Running && !this.isDisappearing) {
-      // this.health -= 2;
+      this.scene.bodDamageAudio.stop();
+      this.scene.bodDamageAudio.play();
 
       this.setTint(0xff0000);
       this.scene.time.delayedCall(200, () => {
@@ -175,12 +176,17 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
       if (remainingRepeats <= 0 || this.health <= nextThreshold) {
         this.phase2Running = false;
         this.isDisappearing = false;
+        this.scene.bodWalkAudio.play();
+        this.scene.bodTeleportAudio.stop();
         return;
       }
 
       // this.isAttacking = true;
+
+      this.scene.bodWalkAudio.pause();
       this.isDisappearing = true;
       this.anims.play("bodDisappear", true);
+      this.scene.bodTeleportAudio.play();
       this.scene.time.delayedCall(1000, () => {
         this.disableBody(true, true);
 
@@ -189,6 +195,8 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
           this.setPosition(spawnX, this.player.y);
           this.enableBody(true, this.x, this.y, true, true);
           this.anims.play("bodAppear", true);
+          this.scene.bodTeleportAudio.play();
+
           this.scene.time.delayedCall(735, () => {
             this.swordAttack(this.player);
           });
@@ -218,14 +226,18 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
         this.setScale(1);
         this.enableBody(true, this.x, this.y, true, true);
         this.anims.play("bodAppear", true);
+        this.scene.bodTeleportAudio.play();
         this.scene.time.delayedCall(735, () => {
           this.phase3Running = false;
           this.isDisappearing = false;
           this.anims.play("bodWalk", true);
+          this.scene.bodWalkAudio.play();
+        this.scene.bodTeleportAudio.stop();
         });
         return;
       }
 
+      this.scene.bodWalkAudio.pause();
       this.isDisappearing = true;
       this.scene.time.delayedCall(1000, () => {
         this.disableBody(true, true);
@@ -239,6 +251,7 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
           );
           portalAnim.setOrigin(0, 0);
           portalAnim.setScale(2);
+          this.scene.bodPortalAudio.play();
           portalAnim.anims.play("bodPortal", true);
           const fistHitbox = this.scene.physics.add
             .image(this.player.x - 10, this.player.y - 30, null)
@@ -275,9 +288,11 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
           };
 
           this.scene.time.delayedCall(600, () => {
+            this.scene.bodFistAudio.play();
             enableHitboxOverlap();
           });
           this.scene.time.delayedCall(1067, () => {
+            this.scene.bodPortalAudio.stop();
             portalAnim.destroy();
             fistHitbox.destroy();
             disappearAndAttack(remainingRepeats - 1);
@@ -290,6 +305,8 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
   }
 
   die() {
+    this.scene.bodWalkAudio.stop();
+    this.scene.bodDeathAudio.play();
     this.disableBody(true, true);
     const enemyDeathAnim = this.scene.add.sprite(
       this.x,
@@ -297,77 +314,98 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
       "bodDisappear"
     );
     if (this.facingLeft) {
+      enemyDeathAnim.x -= 5;
+    } else {
       enemyDeathAnim.setFlipX(true);
+      enemyDeathAnim.x += 5;
     }
     enemyDeathAnim.anims.timeScale = 0.8;
-    this.direction = LEFT;
+    // this.direction = LEFT;
     enemyDeathAnim.anims.play("bodDisappear", true);
     this.scene.time.delayedCall(1250, () => {
+      const explosion = this.scene.add.sprite(
+        enemyDeathAnim.x + 35,
+        enemyDeathAnim.y + 20,
+        "bodExplosion"
+      );
       enemyDeathAnim.destroy();
-      const explosion = this.scene.add.sprite(this.x + 35 , this.y + 20, "bodExplosion");
       explosion.setScale(1.3);
+      if (!this.facingLeft) {
+        explosion.x -= 70;
+      }
       explosion.anims.play("bodExplosion", true);
     });
   }
 
   swordAttack(player) {
-    this.isAttacking = true;
-    this.setVelocity(0, 0);
-
-    const hitbox = this.scene.physics.add
-      .image(this.x, this.y, null)
-      .setVisible(false);
-    hitbox.setSize(this.width * 0.9, this.height * 0.9);
-    hitbox.setImmovable(true);
-    hitbox.body.setAllowGravity(false);
-
-    const enableHitboxOverlap = () => {
-      const overlapCallback = () => {
-        const dx = player.x - this.x;
-        const dy = player.y - this.y;
-        const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(450);
-
-        player.handleDamage(dir);
-        sceneEvents.emit("player-health-changed", player.health);
-
-        if (player.health <= 0) {
-          this.scene.physics.world.removeCollider(this.scene.playerBODCollider);
-          this.scene.playerBODCollider = null;
-        }
-      };
-      this.scene.physics.add.overlap(
-        hitbox,
-        player,
-        overlapCallback,
-        null,
-        this
-      );
-    };
-
-    this.scene.time.delayedCall(600, () => {
-      enableHitboxOverlap();
-    });
-
-    if (this.phase2Running) {
-      this.anims.timeScale = 1.75;
-    } else {
-      this.anims.timeScale = 1;
-    }
-    this.anims.play("bodAttack", true);
-
-    this.scene.time.delayedCall(1000, () => {
-      hitbox.destroy();
-      this.body.setSize(this.width * 0.4, this.height * 0.6);
-      this.body.offset.y = 38;
-      this.body.offset.x = this.facingLeft ? 76 : 10;
-    });
-
-    this.scene.time.delayedCall(1500, () => {
+    if (this) {
+      this.isAttacking = true;
       this.setVelocity(0, 0);
-      this.isAttacking = false;
-      if (!this.phase2Running) {
-        this.anims.play("bodWalk", true);
+
+      const hitbox = this.scene.physics.add
+        .image(this.x, this.y, null)
+        .setVisible(false);
+      hitbox.setSize(this.width * 0.9, this.height * 0.9);
+      hitbox.setImmovable(true);
+      hitbox.body.setAllowGravity(false);
+
+      const enableHitboxOverlap = () => {
+        const overlapCallback = () => {
+          const dx = player.x - this.x;
+          const dy = player.y - this.y;
+          const dir = new Phaser.Math.Vector2(dx, dy).normalize().scale(450);
+
+          player.handleDamage(dir);
+          sceneEvents.emit("player-health-changed", player.health);
+
+          if (player.health <= 0) {
+            this.scene.physics.world.removeCollider(
+              this.scene.playerBODCollider
+            );
+            this.scene.playerBODCollider = null;
+          }
+        };
+        this.scene.physics.add.overlap(
+          hitbox,
+          player,
+          overlapCallback,
+          null,
+          this
+        );
+      };
+
+      this.scene.time.delayedCall(600, () => {
+        if (this.health > 0) {
+          this.scene.bodSwordAttackAudio.play();
+          enableHitboxOverlap();
+        }
+      });
+
+      if (this.phase2Running) {
+        this.anims.timeScale = 1.75;
+      } else {
+        this.anims.timeScale = 1;
       }
-    });
+      this.anims.play("bodAttack", true);
+
+      this.scene.time.delayedCall(1000, () => {
+        if (this) {
+          hitbox.destroy();
+          this.body.setSize(this.width * 0.4, this.height * 0.6);
+          this.body.offset.y = 38;
+          this.body.offset.x = this.facingLeft ? 76 : 10;
+        }
+      });
+
+      this.scene.time.delayedCall(1500, () => {
+        if (this) {
+          this.setVelocity(0, 0);
+          this.isAttacking = false;
+          if (!this.phase2Running) {
+            this.anims.play("bodWalk", true);
+          }
+        }
+      });
+    }
   }
 }
