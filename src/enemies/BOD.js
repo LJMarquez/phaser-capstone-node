@@ -271,7 +271,7 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
               this.player.handleDamage(dir);
               sceneEvents.emit("player-health-changed", this.player.health);
 
-              if (player.health <= 0) {
+              if (this.player.health <= 0) {
                 this.scene.physics.world.removeCollider(
                   this.scene.playerBODCollider
                 );
