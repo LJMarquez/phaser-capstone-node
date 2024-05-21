@@ -44,7 +44,7 @@ export default class Puzzle1 extends Phaser.Scene {
     createChestAnims(this.anims);
     this.scene.run("game-ui");
 
-    this.bgMusicAudio = this.sound.add("bgMusic", { loop: true, volume: 0.3 });
+    this.bgMusicAudio = this.sound.add("bgMusic", { loop: true, volume: 0.5 });
     this.playerDashAudio = this.sound.add("playerDash", { volume: 0.5 });
     this.playerAttackAudio = this.sound.add("playerAttack", { volume: 0.75 });
     this.chestAudio = this.sound.add("chestOpen", { volume: 0.75 });
