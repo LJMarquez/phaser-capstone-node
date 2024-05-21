@@ -18,6 +18,7 @@ export default class Chest extends Phaser.Physics.Arcade.Sprite {
 
   open() {
     // const player = this.scene.player;
+    this.scene.chestAudio.play();
 
     this.anims.play("chestOpen", true);
     this.disableBody(true, false);

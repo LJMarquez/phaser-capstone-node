@@ -71,9 +71,10 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
       } else {
         this.setFlipX(true);
       }
-
+      
       this.scene.time.delayedCall(600, () => {
         if (!this.isDead) {
+          this.scene.skeletonAttackAudio.play();
           const dx = player.x - this.x;
           const dy = player.y - this.y;
           const distance = Math.sqrt(dx * dx + dy * dy);
@@ -112,6 +113,7 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
 
   die() {
     this.isDead = true;
+    this.scene.skeletonDieAudio.play();
     this.disableBody(true, true);
     const enemyDeathAnim = this.scene.add.sprite(
       this.x - 45,
@@ -141,7 +143,10 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
 
     const speed = 50;
 
-    const inViewport = this.scene.cameras.main.worldView.contains(this.x + this.body.width, this.y + this.body.height);
+    const inViewport = this.scene.cameras.main.worldView.contains(
+      this.x + this.body.width,
+      this.y + this.body.height
+    );
     if (inViewport) {
       this.isVisibleToPlayer = true;
     }

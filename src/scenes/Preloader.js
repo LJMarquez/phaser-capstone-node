@@ -16,12 +16,14 @@ export default class Preloader extends Phaser.Scene {
     this.load.image("tiles2", "tiles/dungeon_tiles_too.png");
     this.load.image("tiles4", "tiles/dungeon_tiles_quatro.png");
 
-    this.load.tilemapTiledJSON("dungeon", "./tiles/dungeon-01.json");
-    this.load.tilemapTiledJSON("dungeon_tiles_too", "./tiles/boss-room-1.json");
+    this.load.tilemapTiledJSON("dungeon-1", "./tiles/dungeon-1.json");
+    this.load.tilemapTiledJSON("boss-room-1", "./tiles/boss-room-1.json");
     this.load.tilemapTiledJSON(
-      "dungeon_tiles_quatro",
-      "./tiles/dungeon-02.json"
+      "dungeon-2",
+      "./tiles/dungeon-2.json"
     );
+    this.load.tilemapTiledJSON("entry-room", "./tiles/entry-room.json");
+    this.load.tilemapTiledJSON("puzzle-1", "./tiles/large_maze.json");
 
     this.load.image("uiHeartFull", "ui/heart.png");
     this.load.image("uiHeartEmpty", "ui/heart_background.png");
@@ -90,7 +92,7 @@ export default class Preloader extends Phaser.Scene {
       frameHeight: 48,
     });
 
-    this.load.spritesheet("morshu", "enemies/morshu-sprites.png", {
+    this.load.spritesheet("morshu", "enemies/morshu-spritesheet.png", {
       frameWidth: 78,
       frameHeight: 88,
     });
@@ -108,6 +110,6 @@ export default class Preloader extends Phaser.Scene {
   }
 
   create() {
-    this.scene.start("boss1");
+    this.scene.start("puzzle1");
   }
 }

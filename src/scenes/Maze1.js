@@ -2,8 +2,9 @@ import Phaser from "phaser";
 import { debugDraw } from "../utils/debug";
 import { createEnemyAnims } from "../anims/EnemyAnims";
 import { createPlayerAnims } from "../anims/PlayerAnims";
+import { createChestAnims } from "../anims/ChestAnims";
 import Skeleton from "../enemies/Skeleton";
-import BOD from "../enemies/BOD";
+import Chest from "../game-items/Chest";
 import "../characters/Player";
 import { sceneEvents } from "../events/EventCenter";
 
@@ -23,34 +24,43 @@ export default class Maze1 extends Phaser.Scene {
     this.healthInitialized = false;
   }
 
-  preload() {}
+  preload() {
+    this.load.audio("playerDash", "audio/player-dash.wav");
+    this.load.audio("playerAttack", "audio/player-attack.wav");
+    this.load.audio("playerThrow", "audio/bodTeleport.wav");
+    this.load.audio("chestOpen", "audio/chest-open.wav");
+    this.load.audio("skeletonAttack", "audio/bodSwordAttack.wav");
+    this.load.audio("skeletonDie", "audio/bodDeath.wav");
 
+  }
+  
   create() {
     createPlayerAnims(this.anims);
     createEnemyAnims(this.anims);
+    createChestAnims(this.anims);
     this.scene.run("game-ui");
+    
+    this.playerDashAudio = this.sound.add("playerDash", { volume: 0.5 });
+    this.playerAttackAudio = this.sound.add("playerAttack", { volume: 0.75 });
+    this.chestAudio = this.sound.add("chestOpen", { volume: 0.75 });
+    this.playerKnifeAudio = this.sound.add("playerThrow", { volume: 0.5 });
 
     cursors = this.input.keyboard.createCursorKeys();
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-    const map = this.make.tilemap({ key: "dungeon_tiles_quatro" });
-    const tileset = map.addTilesetImage(
-      "dungeon_tiles_quatro",
-      "tiles4",
-      16,
-      16
-    );
+    const map = this.make.tilemap({ key: "dungeon-1" });
+    const tileset = map.addTilesetImage("dungeon_tiles_quatro", "tiles4", 16, 16);
 
     map.createLayer("Ground", tileset);
     // map.createLayer("Gracias", tileset);
     this.wallsLayer = map.createLayer("Walls", tileset);
-    // this.openDoor = map.createLayer("Open_Door", tileset);
+    // this.openDoor = map.createLayer("Door", tileset);
     // this.lockedDoor = map.createLayer("Locked_Door", tileset);
 
     this.wallsLayer.setCollisionByProperty({ collides: true });
-    // this.openDoor.setCollisionByProperty({ collision: true });
+    // this.openDoor.setCollisionByProperty({ collides: true });
     // this.lockedDoor.setCollisionByProperty({ collision: true });
     // debugDraw(this.wallsLayer, this);
 
@@ -58,7 +68,8 @@ export default class Maze1 extends Phaser.Scene {
       classType: Phaser.Physics.Arcade.Image,
     });
 
-    this.player = this.add.player(520, 1530, "player", cursors);
+    this.player = this.add.player(40, 13, "player", cursors);
+    // this.player = this.add.player(520, 1530, "player", cursors);
     this.player.setKnives(this.knives);
 
     if (window.globalPlayerData) {
@@ -75,10 +86,30 @@ export default class Maze1 extends Phaser.Scene {
       },
     });
 
-    this.skeletons.get(300, 150, "skeleton");
+    this.chests = this.physics.add.group({
+      classType: Chest,
+      createCallback: (go) => {
+        const chestGo = go;
+        chestGo.body.onCollide = true;
+      },
+    });
 
-    this.skeletons.get(520, 1350, "skeleton");
-    this.skeletons.get(200, 150, "skeleton");
+    this.chests.get(520, 1450, "chest", "knife");
+    this.chests.get(540, 1480, "chest", "potion");
+    
+    this.skeletons.get(300, 200, "skeleton");
+    this.skeletons.get(200, 200, "skeleton");
+    
+    // this.skeletons.get(520, 1350, "skeleton");
+
+    this.physics.add.collider(
+      this.player,
+      this.openDoor,
+      this.nextLevel,
+      null,
+      this
+    );
+
 
     this.physics.add.collider(this.player, this.wallsLayer);
     // this.playerLockedDoorCollider = this.physics.add.collider(
@@ -87,6 +118,13 @@ export default class Maze1 extends Phaser.Scene {
     // );
     this.physics.add.collider(this.skeletons, this.wallsLayer);
 
+    this.physics.add.collider(
+      this.chests,
+      this.player,
+      this.chestCollision,
+      undefined,
+      this
+    );
     this.physics.add.collider(
       this.knives,
       this.wallsLayer,
@@ -108,6 +146,10 @@ export default class Maze1 extends Phaser.Scene {
       undefined,
       this
     );
+  }
+
+  chestCollision(player, chest) {
+    chest.open();
   }
 
   knifeWallCollision(knife) {

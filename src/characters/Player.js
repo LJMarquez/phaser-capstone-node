@@ -42,7 +42,9 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
-    this.scene.playerDashAudio.play();
+    if (this.canDash) {
+      this.scene.playerDashAudio.play();
+    }
 
     this.canDash = false;
 

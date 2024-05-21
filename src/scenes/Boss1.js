@@ -70,7 +70,7 @@ export default class Boss1 extends Phaser.Scene {
     this.playerWalkAudio = this.sound.add("bodWalk", { loop: true, volume: 0.5 });
     this.playerDashAudio = this.sound.add("playerDash", { volume: 0.5 });
     this.playerAttackAudio = this.sound.add("playerAttack", { volume: 0.75 });
-    this.playerKnifeAudio = this.sound.add("bodTeleport", { loop: true, volume: 0.5 });
+    this.playerKnifeAudio = this.sound.add("bodTeleport", { volume: 0.5 });
   
     this.bodWalkAudio.play();
     this.bossMusic.play();
@@ -80,7 +80,7 @@ export default class Boss1 extends Phaser.Scene {
     xKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.X);
     shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
-    const map = this.make.tilemap({ key: "dungeon_tiles_too" });
+    const map = this.make.tilemap({ key: "boss-room-1" });
     const tileset = map.addTilesetImage("dungeon_tiles_too", "tiles2", 16, 16);
 
     map.createLayer("Ground", tileset);
@@ -92,7 +92,7 @@ export default class Boss1 extends Phaser.Scene {
     this.wallsLayer.setCollisionByProperty({ collision: true });
     this.openDoor.setCollisionByProperty({ collision: true });
     this.lockedDoor.setCollisionByProperty({ collision: true });
-    debugDraw(this.wallsLayer, this);
+    // debugDraw(this.wallsLayer, this);
 
     this.knives = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
@@ -116,10 +116,10 @@ export default class Boss1 extends Phaser.Scene {
       },
     });
 
-    this.time.delayedCall(6, () => {
+    this.time.delayedCall(6000, () => {
       const bodAppearAnim = this.add.sprite(970, 450, "bodAppear");
       bodAppearAnim.anims.play("bodAppear", true);
-      this.time.delayedCall(1, () => {
+      this.time.delayedCall(1000, () => {
         bodAppearAnim.destroy();
         this.bod.get(970, 450, "bod", this.player);
       });
