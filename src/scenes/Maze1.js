@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import { debugDraw } from "../utils/debug";
 import { createEnemyAnims } from "../anims/EnemyAnims";
 import { createPlayerAnims } from "../anims/PlayerAnims";
 import { createChestAnims } from "../anims/ChestAnims";
@@ -25,25 +24,40 @@ export default class Maze1 extends Phaser.Scene {
   }
 
   preload() {
+    this.load.audio("bgMusic", "audio/bg-music-1.wav");
     this.load.audio("playerDash", "audio/player-dash.wav");
     this.load.audio("playerAttack", "audio/player-attack.wav");
     this.load.audio("playerThrow", "audio/bodTeleport.wav");
     this.load.audio("chestOpen", "audio/chest-open.wav");
     this.load.audio("skeletonAttack", "audio/bodSwordAttack.wav");
     this.load.audio("skeletonDie", "audio/bodDeath.wav");
-
+    this.load.audio("playerDamage", "audio/player-damage.wav");
+    this.load.audio("knifeCollect", "audio/knife-collect.mp3");
+    this.load.audio("potionCollect", "audio/health-potion.mp3");
+    this.load.audio("gameOver", "audio/game-over.mp3");
   }
-  
+
   create() {
     createPlayerAnims(this.anims);
     createEnemyAnims(this.anims);
     createChestAnims(this.anims);
     this.scene.run("game-ui");
-    
+
+    this.bgMusicAudio = this.sound.add("bgMusic", { loop: true, volume: 0.3 });
     this.playerDashAudio = this.sound.add("playerDash", { volume: 0.5 });
     this.playerAttackAudio = this.sound.add("playerAttack", { volume: 0.75 });
     this.chestAudio = this.sound.add("chestOpen", { volume: 0.75 });
     this.playerKnifeAudio = this.sound.add("playerThrow", { volume: 0.5 });
+    this.skeletonAttackAudio = this.sound.add("skeletonAttack", {
+      volume: 0.5,
+    });
+    this.skeletonDieAudio = this.sound.add("skeletonDie", { volume: 0.5 });
+    this.playerDamageAudio = this.sound.add("playerDamage", { volume: 0.5 });
+    this.knifeCollectAudio = this.sound.add("knifeCollect", { volume: 1 });
+    this.potionCollectAudio = this.sound.add("potionCollect", { volume: 0.5 });
+    this.gameOverAudio = this.sound.add("gameOver", { volume: 0.5 });
+
+    this.bgMusicAudio.play();
 
     cursors = this.input.keyboard.createCursorKeys();
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
@@ -51,32 +65,26 @@ export default class Maze1 extends Phaser.Scene {
     shiftKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
     const map = this.make.tilemap({ key: "dungeon-1" });
-    const tileset = map.addTilesetImage("dungeon_tiles_quatro", "tiles4", 16, 16);
+    const tileset = map.addTilesetImage(
+      "dungeon_tiles_quatro",
+      "tiles4",
+      16,
+      16
+    );
 
     map.createLayer("Ground", tileset);
     // map.createLayer("Gracias", tileset);
     this.wallsLayer = map.createLayer("Walls", tileset);
-    // this.openDoor = map.createLayer("Door", tileset);
-    // this.lockedDoor = map.createLayer("Locked_Door", tileset);
+    this.openDoor = map.createLayer("Door", tileset);
+    this.lockedDoor = map.createLayer("Locked_Door", tileset);
 
     this.wallsLayer.setCollisionByProperty({ collides: true });
-    // this.openDoor.setCollisionByProperty({ collides: true });
-    // this.lockedDoor.setCollisionByProperty({ collision: true });
-    // debugDraw(this.wallsLayer, this);
+    this.openDoor.setCollisionByProperty({ collides: true });
+    this.lockedDoor.setCollisionByProperty({ collides: true });
 
     this.knives = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
     });
-
-    this.player = this.add.player(40, 13, "player", cursors);
-    // this.player = this.add.player(520, 1530, "player", cursors);
-    this.player.setKnives(this.knives);
-
-    if (window.globalPlayerData) {
-      this.player.health = window.globalPlayerData.health;
-    }
-
-    this.cameras.main.startFollow(this.player, true);
 
     this.skeletons = this.physics.add.group({
       classType: Skeleton,
@@ -94,28 +102,32 @@ export default class Maze1 extends Phaser.Scene {
       },
     });
 
-    this.chests.get(520, 1450, "chest", "knife");
-    this.chests.get(540, 1480, "chest", "potion");
-    
-    this.skeletons.get(300, 200, "skeleton");
-    this.skeletons.get(200, 200, "skeleton");
-    
-    // this.skeletons.get(520, 1350, "skeleton");
+    this.chests.get(540, 135, "chest", "knife");
+    this.chests.get(860, 155, "chest", "potion");
 
-    this.physics.add.collider(
-      this.player,
-      this.openDoor,
-      this.nextLevel,
-      null,
-      this
-    );
+    this.skeletons.get(730, 260, "skeleton");
+    this.skeletons.get(770, 310, "skeleton");
 
+    this.skeletons.get(855, 260, "skeleton");
+    this.skeletons.get(840, 310, "skeleton");
+    this.skeletons.get(740, 165, "skeleton");
+
+    this.player = this.add.player(472, 270, "player", cursors);
+    this.player.setKnives(this.knives);
+
+    if (window.globalPlayerData) {
+      this.player.health = window.globalPlayerData.health;
+    }
+
+    this.cameras.main.startFollow(this.player, true);
 
     this.physics.add.collider(this.player, this.wallsLayer);
-    // this.playerLockedDoorCollider = this.physics.add.collider(
-    //   this.player,
-    //   this.lockedDoor
-    // );
+
+    this.playerLockedDoorCollider = this.physics.add.collider(
+      this.player,
+      this.lockedDoor
+    );
+
     this.physics.add.collider(this.skeletons, this.wallsLayer);
 
     this.physics.add.collider(
@@ -159,6 +171,18 @@ export default class Maze1 extends Phaser.Scene {
   knifeSkeletonCollision(knife, skeleton) {
     skeleton.die();
     knife.destroy();
+    if (this.skeletons.countActive(true) === 0) {
+      this.physics.add.collider(
+        this.player,
+        this.openDoor,
+        this.nextLevel,
+        null,
+        this
+      );
+      this.lockedDoor.destroy();
+      this.playerLockedDoorCollider.destroy();
+      this.playerLockedDoorCollider = null;
+    }
   }
 
   playerSkeletonCollision(player, enemy) {
@@ -169,13 +193,51 @@ export default class Maze1 extends Phaser.Scene {
     sceneEvents.emit("player-health-changed", player.health);
 
     if (player.health <= 0) {
+      this.gameOverAudio.play();
+      this.bgMusicAudio.pause();
       this.playerEnemyCollider.destroy();
+      this.time.delayedCall(1000, () => {
+        this.showRestartButton();
+      });
     }
   }
 
+  showRestartButton() {
+    const boxWidth = 200;
+    const boxHeight = 50;
+    const restartBox = this.add
+      .graphics()
+      .fillStyle(0x000000, 0.8)
+      .fillRect(0, 0, boxWidth, boxHeight);
+
+    restartBox.x = this.player.x - boxWidth / 2;
+    restartBox.y = this.player.y - 100;
+
+    const restartButton = this.add
+      .text(0, 0, "Restart", {
+        fontSize: "32px",
+        fill: "#fff",
+      })
+      .setOrigin(0.5);
+
+    restartButton.setPosition(
+      restartBox.x + boxWidth / 2,
+      restartBox.y + boxHeight / 2
+    );
+    restartButton.setInteractive();
+    restartButton.on("pointerdown", () => {
+      this.gameOverAudio.stop();
+      this.player.health = 3;
+      window.globalPlayerData.health = 3;
+      window.globalPlayerData.knives = 5;
+      this.scene.start("maze1");
+    });
+  }
+
   nextLevel() {
+    this.bgMusicAudio.stop();
     window.globalPlayerData.health = this.player.health;
-    this.scene.start("boss1");
+    this.scene.start("puzzle1");
   }
 
   update(d, dt) {
@@ -222,6 +284,18 @@ export default class Maze1 extends Phaser.Scene {
           () => {
             skeleton.die();
             this.player.hitbox.destroy();
+            if (this.skeletons.countActive(true) === 0) {
+              this.physics.add.collider(
+                this.player,
+                this.openDoor,
+                this.nextLevel,
+                null,
+                this
+              );
+              this.lockedDoor.destroy();
+              this.playerLockedDoorCollider.destroy();
+              this.playerLockedDoorCollider = null;
+            }
           },
           null,
           this

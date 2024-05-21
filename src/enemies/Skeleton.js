@@ -65,15 +65,17 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
   }
 
   skeletonAttack(player) {
+    this.player = this.scene.player;
+
     if (!this.isDead) {
       if (player.x > this.x) {
         this.setFlipX(false);
       } else {
         this.setFlipX(true);
       }
-      
+
       this.scene.time.delayedCall(600, () => {
-        if (!this.isDead) {
+        if (!this.isDead && this.player.health > 0) {
           this.scene.skeletonAttackAudio.play();
           const dx = player.x - this.x;
           const dy = player.y - this.y;
@@ -95,19 +97,21 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
         }
       });
 
-      this.moveEventActive = false;
-      this.setVelocity(0, 0);
-      this.anims.play("enemyAttack", true);
+      if (this.player.health > 0) {
+        this.moveEventActive = false;
+        this.setVelocity(0, 0);
+        this.anims.play("enemyAttack", true);
 
-      this.scene.time.delayedCall(1667, () => {
-        if (!this.isDead) {
-          this.moveEventActive = true;
-          this.anims.play("enemyWalk", true);
-          this.body.setSize(this.width * 0.6, this.height * 0.6);
-          this.body.offset.y = 13;
-          this.body.offset.x = 5;
-        }
-      });
+        this.scene.time.delayedCall(1667, () => {
+          if (!this.isDead) {
+            this.moveEventActive = true;
+            this.anims.play("enemyWalk", true);
+            this.body.setSize(this.width * 0.6, this.height * 0.6);
+            this.body.offset.y = 13;
+            this.body.offset.x = 5;
+          }
+        });
+      }
     }
   }
 
@@ -141,6 +145,12 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
   preUpdate(t, dt) {
     super.preUpdate(t, dt);
 
+    this.player = this.scene.player;
+
+    if (this.player.health <= 0) {
+      this.anims.play("enemyIdle", true);
+    }
+
     const speed = 50;
 
     const inViewport = this.scene.cameras.main.worldView.contains(
@@ -151,7 +161,11 @@ export default class Skeleton extends Phaser.Physics.Arcade.Sprite {
       this.isVisibleToPlayer = true;
     }
 
-    if (this.moveEventActive && this.isVisibleToPlayer) {
+    if (
+      this.moveEventActive &&
+      this.isVisibleToPlayer &&
+      this.player.health > 0
+    ) {
       switch (this.direction) {
         case UP:
           this.setVelocityY(-50);

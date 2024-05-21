@@ -23,6 +23,7 @@ export default class Preloader extends Phaser.Scene {
       "./tiles/dungeon-2.json"
     );
     this.load.tilemapTiledJSON("entry-room", "./tiles/entry-room.json");
+    this.load.tilemapTiledJSON("end-room", "./tiles/end-room.json");
     this.load.tilemapTiledJSON("puzzle-1", "./tiles/large_maze.json");
 
     this.load.image("uiHeartFull", "ui/heart.png");
@@ -48,6 +49,15 @@ export default class Preloader extends Phaser.Scene {
     this.load.image("health-potion", "items/health-potion.png");
 
     this.load.image("knife", "weapons/knife.png");
+
+    this.load.image("start-button", "gui/start-button.png");
+    this.load.image("home-bg", "gui/dungeon-bg-1.png");
+    this.load.image("title", "gui/MILL-Title.png");
+
+    this.load.spritesheet("oldMan", "player/old-man.png", {
+      frameWidth: 16,
+      frameHeight: 16,
+    });
 
     this.load.spritesheet("uiHeart", "ui/heart_animated.png", {
       frameWidth: 17,
@@ -110,6 +120,6 @@ export default class Preloader extends Phaser.Scene {
   }
 
   create() {
-    this.scene.start("puzzle1");
+    this.scene.start("home");
   }
 }

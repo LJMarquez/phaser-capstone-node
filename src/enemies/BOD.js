@@ -232,7 +232,7 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
           this.isDisappearing = false;
           this.anims.play("bodWalk", true);
           this.scene.bodWalkAudio.play();
-        this.scene.bodTeleportAudio.stop();
+          this.scene.bodTeleportAudio.stop();
         });
         return;
       }
@@ -271,11 +271,17 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
               this.player.handleDamage(dir);
               sceneEvents.emit("player-health-changed", this.player.health);
 
-              if (this.player.health <= 0) {
+              if (player.health <= 0) {
                 this.scene.physics.world.removeCollider(
                   this.scene.playerBODCollider
                 );
                 this.scene.playerBODCollider = null;
+                this.scene.healthInitialized = false;
+                this.scene.bossMusic.pause();
+                this.scene.gameOverMusic.play();
+                this.scene.time.delayedCall(1000, () => {
+                  this.scene.showRestartButton();
+                });
               }
             };
             this.scene.physics.add.overlap(
@@ -358,11 +364,23 @@ export default class BOD extends Phaser.Physics.Arcade.Sprite {
           player.handleDamage(dir);
           sceneEvents.emit("player-health-changed", player.health);
 
+          // if (player.health <= 0) {
+          //   this.scene.physics.world.removeCollider(
+          //     this.scene.playerBODCollider
+          //   );
+          //   this.scene.playerBODCollider = null;
+          // }
           if (player.health <= 0) {
             this.scene.physics.world.removeCollider(
               this.scene.playerBODCollider
             );
             this.scene.playerBODCollider = null;
+            this.scene.healthInitialized = false;
+            this.scene.bossMusic.pause();
+            this.scene.gameOverMusic.play();
+            this.scene.time.delayedCall(1000, () => {
+              this.scene.showRestartButton();
+            });
           }
         };
         this.scene.physics.add.overlap(

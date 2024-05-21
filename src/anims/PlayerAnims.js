@@ -143,8 +143,12 @@ const createPlayerAnims = (anims) => {
       repeat: 0,
     });
 
-    // make throw anims
-
+    anims.create({
+      key: "oldManIdle",
+      frames: anims.generateFrameNumbers("oldMan", { start: 1, end: 4 }),
+      frameRate: 5,
+      repeat: -1,
+    });
   };
 
   export {

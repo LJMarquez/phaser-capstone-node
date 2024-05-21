@@ -113,6 +113,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       return;
     }
 
+    this.scene.playerDamageAudio.play();
     this._health--;
     window.globalPlayerData.health = this._health;
     if (this._health <= 0) {

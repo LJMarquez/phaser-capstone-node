@@ -1,5 +1,4 @@
 import Phaser from "phaser";
-import { debugDraw } from "../utils/debug";
 import { createEnemyAnims } from "../anims/EnemyAnims";
 import { createPlayerAnims } from "../anims/PlayerAnims";
 import BOD from "../enemies/BOD";
@@ -34,6 +33,7 @@ export default class Boss1 extends Phaser.Scene {
     this.bodSwordAttackAudio = null;
     this.bodTeleportAudio = null;
     this.bodWalkAudio = null;
+    this.firstAttempt = true;
   }
 
   preload() {
@@ -50,30 +50,37 @@ export default class Boss1 extends Phaser.Scene {
     this.load.audio("playerWalk", "audio/player-walk.wav");
     this.load.audio("playerDash", "audio/player-dash.wav");
     this.load.audio("playerAttack", "audio/player-attack.wav");
+    this.load.audio("playerDamage", "audio/player-damage.wav");
+    this.load.audio("knifeCollect", "audio/knife-collect.mp3");
   }
 
   create() {
     createPlayerAnims(this.anims);
     createEnemyAnims(this.anims);
-    this.scene.run("game-ui");
+    this.scene.run("boss-end-ui");
 
-    this.bossMusic = this.sound.add('bodMusic', { loop: true, volume: 0.3 });
-    this.gameOverMusic = this.sound.add('gameOver', { volume: 0.5 });
-    this.winMusic = this.sound.add('levelWin', { volume: 0.5 });
+    this.bossMusic = this.sound.add("bodMusic", { loop: true, volume: 0.3 });
+    this.gameOverMusic = this.sound.add("gameOver", { volume: 0.5 });
+    this.winMusic = this.sound.add("levelWin", { volume: 0.5 });
     this.bodDamageAudio = this.sound.add("bodDamage", { volume: 0.5 });
     this.bodDeathAudio = this.sound.add("bodDeath", { volume: 0.5 });
     this.bodFistAudio = this.sound.add("bodFist", { volume: 0.75 });
-    this.bodPortalAudio = this.sound.add("bodPortal", { loop: true, volume: 1 });
+    this.bodPortalAudio = this.sound.add("bodPortal", {
+      loop: true,
+      volume: 1,
+    });
     this.bodSwordAttackAudio = this.sound.add("bodSwordAttack", { volume: 1 });
     this.bodTeleportAudio = this.sound.add("bodTeleport", { volume: 0.5 });
     this.bodWalkAudio = this.sound.add("bodWalk", { loop: true, volume: 0.75 });
-    this.playerWalkAudio = this.sound.add("bodWalk", { loop: true, volume: 0.5 });
+    this.playerWalkAudio = this.sound.add("bodWalk", {
+      loop: true,
+      volume: 0.5,
+    });
     this.playerDashAudio = this.sound.add("playerDash", { volume: 0.5 });
     this.playerAttackAudio = this.sound.add("playerAttack", { volume: 0.75 });
     this.playerKnifeAudio = this.sound.add("bodTeleport", { volume: 0.5 });
-  
-    this.bodWalkAudio.play();
-    this.bossMusic.play();
+    this.playerDamageAudio = this.sound.add("playerDamage", { volume: 0.5 });
+    this.knifeCollectAudio = this.sound.add("knifeCollect", { volume: 1 });
 
     cursors = this.input.keyboard.createCursorKeys();
     zKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.Z);
@@ -92,7 +99,6 @@ export default class Boss1 extends Phaser.Scene {
     this.wallsLayer.setCollisionByProperty({ collision: true });
     this.openDoor.setCollisionByProperty({ collision: true });
     this.lockedDoor.setCollisionByProperty({ collision: true });
-    // debugDraw(this.wallsLayer, this);
 
     this.knives = this.physics.add.group({
       classType: Phaser.Physics.Arcade.Image,
@@ -116,14 +122,29 @@ export default class Boss1 extends Phaser.Scene {
       },
     });
 
-    this.time.delayedCall(6000, () => {
-      const bodAppearAnim = this.add.sprite(970, 450, "bodAppear");
-      bodAppearAnim.anims.play("bodAppear", true);
-      this.time.delayedCall(1000, () => {
-        bodAppearAnim.destroy();
-        this.bod.get(970, 450, "bod", this.player);
+    if (this.firstAttempt) {
+      this.time.delayedCall(36000, () => {
+        this.scene.run("game-ui");
+        const bodAppearAnim = this.add.sprite(970, 450, "bodAppear");
+        bodAppearAnim.anims.play("bodAppear", true);
+        this.time.delayedCall(1000, () => {
+          bodAppearAnim.destroy();
+          this.bod.get(970, 450, "bod", this.player);
+          this.bodWalkAudio.play();
+        });
       });
-    });
+    } else {
+      this.scene.run("game-ui");
+      this.time.delayedCall(6000, () => {
+        const bodAppearAnim = this.add.sprite(970, 450, "bodAppear");
+        bodAppearAnim.anims.play("bodAppear", true);
+        this.time.delayedCall(1000, () => {
+          bodAppearAnim.destroy();
+          this.bod.get(970, 450, "bod", this.player);
+          this.bodWalkAudio.play();
+        });
+      });
+    }
 
     this.physics.add.collider(this.player, this.wallsLayer);
     this.playerLockedDoorCollider = this.physics.add.collider(
@@ -178,12 +199,53 @@ export default class Boss1 extends Phaser.Scene {
     sceneEvents.emit("player-health-changed", player.health);
     if (player.health <= 0) {
       this.playerBODCollider.destroy();
+      this.healthInitialized = false;
       this.bossMusic.pause();
       this.gameOverMusic.play();
+      this.time.delayedCall(1000, () => {
+        this.showRestartButton();
+      });
     }
   }
 
+  showRestartButton() {
+    this.firstAttempt = false;
+    const boxWidth = 200;
+    const boxHeight = 50;
+    const restartBox = this.add
+      .graphics()
+      .fillStyle(0x000000, 0.8)
+      .fillRect(0, 0, boxWidth, boxHeight);
+
+    restartBox.x = this.player.x - boxWidth / 2;
+    restartBox.y = this.player.y - 70;
+
+    const restartButton = this.add
+      .text(0, 0, "Restart", {
+        fontSize: "32px",
+        fill: "#fff",
+      })
+      .setOrigin(0.5);
+
+    restartButton.setPosition(
+      restartBox.x + boxWidth / 2,
+      restartBox.y + boxHeight / 2
+    );
+    restartButton.setInteractive();
+    restartButton.on("pointerdown", () => {
+      this.bossMusic.stop();
+      this.gameOverMusic.stop();
+      this.bossUICreated = false;
+      this.healthInitialized = false;
+      this.player.health = 3;
+      window.globalPlayerData.health = 3;
+      window.globalPlayerData.knives = 10;
+      this.scene.start("boss1");
+    });
+  }
+
   collectLawnMower() {
+    this.knifeCollectAudio.play();
     this.lawnMower.destroy();
     sceneEvents.emit("collect-lawn-mower");
     if (this.playerLockedDoorCollider) {
@@ -205,7 +267,7 @@ export default class Boss1 extends Phaser.Scene {
 
   nextLevel() {
     window.globalPlayerData.health = this.player.health;
-    this.scene.start("maze2");
+    this.scene.start("end");
   }
 
   update(d, dt) {
@@ -230,6 +292,7 @@ export default class Boss1 extends Phaser.Scene {
 
     this.bod.getChildren().forEach((bod) => {
       if (bod.health <= 0) {
+        this.bodWalkAudio.stop();
         this.bossMusic.pause();
         this.winMusic.play();
         if (!this.lawnMowerCreated) {
@@ -237,7 +300,7 @@ export default class Boss1 extends Phaser.Scene {
           let bodY = bod.y;
           let bodWidth = bod.body.width;
           let bodHeight = bod.body.height;
-  
+
           this.time.delayedCall(2850, () => {
             this.lawnMower = this.physics.add.image(
               bodX + bodWidth / 2,
@@ -311,9 +374,22 @@ export default class Boss1 extends Phaser.Scene {
       }
     });
     if (!this.bossUICreated) {
-      sceneEvents.emit("bod-create-boss-ui");
-      sceneEvents.emit("bod-fade-in-boss-ui");
-      this.bossUICreated = true;
+      if (this.firstAttempt) {
+        this.time.delayedCall(1000, () => {
+          sceneEvents.emit("bod-intro");
+        });
+        this.time.delayedCall(30000, () => {
+          this.bossMusic.play();
+          sceneEvents.emit("bod-create-boss-ui");
+          sceneEvents.emit("bod-fade-in-boss-ui");
+        });
+        this.bossUICreated = true;
+      } else {
+        this.bossMusic.play();
+        sceneEvents.emit("bod-create-boss-ui");
+        sceneEvents.emit("bod-fade-in-boss-ui");
+        this.bossUICreated = true;
+      }
     }
   }
 }

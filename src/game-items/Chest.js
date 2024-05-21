@@ -54,13 +54,17 @@ export default class Chest extends Phaser.Physics.Arcade.Sprite {
   }
   collectKnives(player, knife) {
     knife.destroy();
-    window.globalPlayerData.knives += 15;
+    this.scene.knifeCollectAudio.play();
+    window.globalPlayerData.knives += 5;
     sceneEvents.emit("update-knives-count");
   }
   collectPotion(player, potion) {
     potion.destroy();
-    window.globalPlayerData.health++;
-    player.health = window.globalPlayerData.health;
-    sceneEvents.emit("player-health-changed", player.health);
+    this.scene.potionCollectAudio.play();
+    if (window.globalPlayerData.health < 3) {
+      window.globalPlayerData.health++;
+      player.health = window.globalPlayerData.health;
+      sceneEvents.emit("player-health-changed", player.health);
+    }
   }
 }
