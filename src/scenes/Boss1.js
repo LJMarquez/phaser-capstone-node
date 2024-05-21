@@ -90,6 +90,8 @@ export default class Boss1 extends Phaser.Scene {
     const map = this.make.tilemap({ key: "boss-room-1" });
     const tileset = map.addTilesetImage("dungeon_tiles_too", "tiles2", 16, 16);
 
+    this.scene.stop("game-ui");
+
     map.createLayer("Ground", tileset);
     map.createLayer("Gracias", tileset);
     this.wallsLayer = map.createLayer("Walls", tileset);
