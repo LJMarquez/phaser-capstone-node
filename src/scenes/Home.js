@@ -16,7 +16,7 @@ export default class Home extends Phaser.Scene {
       .setOrigin(0.5)
       .setDisplaySize(this.cameras.main.width, this.cameras.main.height);
 
-    this.music = this.sound.add("music", { loop: true, volume: 0.3 });
+    this.music = this.sound.add("music", { loop: true });
     this.music.play();
 
     const title = this.add.image(this.cameras.main.centerX, 45, "title");
